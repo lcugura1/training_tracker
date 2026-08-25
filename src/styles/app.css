@@ -1,0 +1,667 @@
+@import "./tokens.css";
+
+/* ===========================================================================
+   Aplikacija je dark-only (html[data-theme="dark"]), pa ovdje samo pojačavamo
+   podlogu: tokeni daju čisto crno, a staklu treba dublja, obojena pozadina da
+   bi refrakcija i specular rub uopće imali što lomiti.
+   =========================================================================== */
+
+:root {
+  --ground: #06070c;
+  --ground-2: #0b0d16;
+  --glass-rim: rgba(255, 255, 255, 0.10);
+  --glass-specular: rgba(255, 255, 255, 0.16);
+  --app-max: 460px;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--label);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  /* iOS: spriječi bounce scroll koji otkriva bijelu podlogu ispod aurore */
+  overscroll-behavior-y: none;
+}
+
+button { font: inherit; color: inherit; }
+
+/* ---------------------------------------------------------------------------
+   AURORA — spori gradijentni blobovi iza stakla. Animiramo isključivo transform
+   (nikad filter ili position), pa ovo ostaje na compositoru i ne trza.
+--------------------------------------------------------------------------- */
+
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 80% at 50% 0%, var(--ground-2) 0%, var(--ground) 60%);
+  pointer-events: none;
+}
+
+.aurora__blob {
+  position: absolute;
+  width: 62vmax;
+  height: 62vmax;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.55;
+  will-change: transform;
+}
+
+.aurora__blob--1 {
+  background: radial-gradient(circle, #3b1f8f 0%, transparent 65%);
+  top: -22vmax; left: -18vmax;
+  animation: drift-1 26s ease-in-out infinite alternate;
+}
+.aurora__blob--2 {
+  background: radial-gradient(circle, #0a4d8c 0%, transparent 65%);
+  top: 18vmax; right: -26vmax;
+  animation: drift-2 32s ease-in-out infinite alternate;
+}
+.aurora__blob--3 {
+  background: radial-gradient(circle, #8c1f5a 0%, transparent 65%);
+  bottom: -28vmax; left: 8vmax;
+  animation: drift-3 38s ease-in-out infinite alternate;
+}
+
+@keyframes drift-1 {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(12vmax, 8vmax, 0) scale(1.18); }
+}
+@keyframes drift-2 {
+  from { transform: translate3d(0, 0, 0) scale(1.1); }
+  to   { transform: translate3d(-14vmax, 12vmax, 0) scale(0.92); }
+}
+@keyframes drift-3 {
+  from { transform: translate3d(0, 0, 0) scale(0.95); }
+  to   { transform: translate3d(10vmax, -12vmax, 0) scale(1.2); }
+}
+
+/* ---------------------------------------------------------------------------
+   GLASS — puni recept: translucencija + blur/saturate + specular gornji rub +
+   hairline obrub + dubinska sjena. Sam blur bi bio glassmorphism iz 2020.
+--------------------------------------------------------------------------- */
+
+.glass {
+  background: var(--material-regular-tint);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+          backdrop-filter: blur(20px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 var(--glass-specular),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.06),
+    0 0 0 0.5px rgba(0, 0, 0, 0.4),
+    var(--shadow-glass);
+  border-radius: var(--radius-xl);
+}
+
+.glass--thick {
+  background: var(--material-thick-tint);
+  -webkit-backdrop-filter: blur(34px) saturate(180%);
+          backdrop-filter: blur(34px) saturate(180%);
+}
+
+.glass--thin {
+  background: var(--material-thin-tint);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+          backdrop-filter: blur(14px) saturate(170%);
+}
+
+/* Refrakcija — progresivno poboljšanje, hero elementi. Chromium podržava
+   url() kao backdrop ulaz; ostali dobiju čisto staklo iznad. */
+.glass--liquid {
+  backdrop-filter: blur(20px) saturate(180%) url(#liquid-refraction);
+}
+@supports not (backdrop-filter: url(#liquid-refraction)) {
+  .glass--liquid {
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+            backdrop-filter: blur(20px) saturate(180%);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   LAYOUT
+--------------------------------------------------------------------------- */
+
+.app {
+  position: relative;
+  z-index: 1;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding:
+    max(var(--space-6), env(safe-area-inset-top))
+    var(--space-5)
+    max(var(--space-8), env(safe-area-inset-bottom));
+}
+
+.app__inner {
+  width: 100%;
+  max-width: var(--app-max);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* Tracking se steže kako tekst raste — najveći "ovo nije Apple" propust je
+   jedan globalni letter-spacing. */
+.title-xl {
+  margin: 0;
+  font-size: clamp(2rem, 9vw, var(--text-large-title));
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+}
+
+.title-md {
+  margin: 0;
+  font-size: var(--text-title-3);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-snug);
+}
+
+.subtle {
+  color: var(--label-secondary);
+  font-size: var(--text-subhead);
+  letter-spacing: var(--tracking-normal);
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   KONTROLE — povratna informacija ide na pointer-down, nikad tek na otpuštanju.
+--------------------------------------------------------------------------- */
+
+.btn {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-height: 52px;
+  padding: 0 var(--space-6);
+  border-radius: var(--radius-capsule);
+  font-size: var(--text-headline);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-snug);
+  transition: transform var(--duration-instant) var(--ease-out),
+              opacity var(--duration-instant) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active:not(:disabled) { transform: scale(0.97); }
+.btn:disabled { opacity: 0.4; cursor: default; }
+
+.btn--primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), var(--shadow-3);
+}
+
+.btn--glass {
+  background: var(--material-thin-tint);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+          backdrop-filter: blur(14px) saturate(170%);
+  color: var(--label);
+  box-shadow: inset 0 1px 0 var(--glass-specular),
+              0 0 0 0.5px rgba(255, 255, 255, 0.08);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--label-secondary);
+  min-height: 44px;
+  font-weight: var(--weight-medium);
+  font-size: var(--text-subhead);
+}
+
+:where(button, input, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.field {
+  width: 100%;
+  min-height: 54px;
+  padding: 0 var(--space-5);
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--fill-3);
+  color: var(--label);
+  font-size: var(--text-title-3);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-snug);
+  text-align: center;
+}
+
+.field::placeholder {
+  color: var(--label-tertiary);
+  font-weight: var(--weight-regular);
+  letter-spacing: var(--tracking-normal);
+}
+
+.error {
+  margin: 0;
+  color: var(--red);
+  font-size: var(--text-footnote);
+  text-align: center;
+  min-height: 1.2em;
+}
+
+/* ---------------------------------------------------------------------------
+   PIN — četiri točke plus vlastita tipkovnica. Nativna numerička tipkovnica bi
+   na mobitelu prekrila pola ekrana, pa je radimo sami.
+--------------------------------------------------------------------------- */
+
+.pin__dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-5);
+  margin: var(--space-6) 0;
+}
+
+.pin__dot {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--fill-2);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  transition: transform var(--duration-fast) var(--ease-out),
+              background-color var(--duration-fast) var(--ease-out);
+}
+
+.pin__dot--filled {
+  background: var(--accent);
+  transform: scale(1.18);
+}
+
+.pin__pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+}
+
+.pin__key {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  aspect-ratio: 1.55;
+  border-radius: var(--radius-lg);
+  background: var(--material-thin-tint);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+          backdrop-filter: blur(14px) saturate(170%);
+  box-shadow: inset 0 1px 0 var(--glass-specular),
+              0 0 0 0.5px rgba(255, 255, 255, 0.07);
+  color: var(--label);
+  font-size: var(--text-title-2);
+  font-weight: var(--weight-medium);
+  transition: transform var(--duration-instant) var(--ease-out),
+              background-color var(--duration-instant) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pin__key:active { transform: scale(0.94); background: var(--fill-1); }
+.pin__key--blank { background: none; box-shadow: none; cursor: default; }
+.pin__key:disabled { opacity: 0.35; }
+
+/* ---------------------------------------------------------------------------
+   ZAGLAVLJE I STATISTIKA
+--------------------------------------------------------------------------- */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.stat {
+  padding: var(--space-5);
+  text-align: center;
+}
+
+.stat__value {
+  display: block;
+  font-size: var(--text-large-title);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat__label {
+  display: block;
+  margin-top: var(--space-3);
+  font-size: var(--text-caption-1);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--label-secondary);
+}
+
+/* ---------------------------------------------------------------------------
+   PORUKA SRAMA
+--------------------------------------------------------------------------- */
+
+.shame {
+  position: relative;
+  padding: var(--space-6);
+  overflow: hidden;
+}
+
+.shame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--red);
+  opacity: 0.16;
+  mix-blend-mode: plus-lighter;
+  pointer-events: none;
+}
+
+.shame__label {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-caption-1);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+.shame__text {
+  margin: 0;
+  font-size: var(--text-title-3);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-snug);
+  line-height: var(--leading-snug);
+}
+
+/* ---------------------------------------------------------------------------
+   KALENDAR
+--------------------------------------------------------------------------- */
+
+.cal { padding: var(--space-5); }
+
+.cal__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--space-5);
+  padding: 0 var(--space-2);
+}
+
+.cal__month {
+  margin: 0;
+  font-size: var(--text-title-3);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-snug);
+}
+
+.cal__year {
+  font-size: var(--text-subhead);
+  color: var(--label-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.cal__weekdays,
+.cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.cal__weekdays {
+  margin-bottom: var(--space-3);
+}
+
+.cal__weekday {
+  text-align: center;
+  font-size: var(--text-caption-2);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--label-tertiary);
+}
+
+.cal__cell {
+  appearance: none;
+  border: 0;
+  padding: 0;
+  aspect-ratio: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--fill-4);
+  color: var(--label-secondary);
+  font-size: var(--text-subhead);
+  font-weight: var(--weight-medium);
+  font-variant-numeric: tabular-nums;
+  transition: transform var(--duration-instant) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cal__cell--empty { background: none; }
+
+/* Budući dani se ne mogu označiti — dan još nije ni počeo. */
+.cal__cell--future { opacity: 0.28; }
+
+/* Prošli neoznačeni dani ostaju vidljivi kao podsjetnik, ali su zaključani. */
+.cal__cell--past { opacity: 0.55; }
+
+.cal__cell--today {
+  color: var(--label);
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.cal__cell--today:active { transform: scale(0.92); }
+
+.cal__cell--done {
+  background: var(--fill-2);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--cell-color) 55%, transparent),
+    0 0 16px -4px color-mix(in srgb, var(--cell-color) 70%, transparent);
+}
+
+.cal__cell--done.cal__cell--today {
+  box-shadow:
+    inset 0 0 0 2px var(--cell-color),
+    0 0 20px -4px color-mix(in srgb, var(--cell-color) 80%, transparent);
+}
+
+.cal__emoji {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.cal__daynum {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  font-size: 0.5625rem;
+  font-weight: var(--weight-semibold);
+  opacity: 0.5;
+}
+
+.cal__hint {
+  margin: var(--space-5) 0 0;
+  text-align: center;
+  font-size: var(--text-caption-1);
+  color: var(--label-tertiary);
+}
+
+/* ---------------------------------------------------------------------------
+   BOTTOM SHEET
+--------------------------------------------------------------------------- */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.5);
+  -webkit-backdrop-filter: blur(3px);
+          backdrop-filter: blur(3px);
+}
+
+.sheet {
+  position: fixed;
+  z-index: 21;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0 auto;
+  width: 100%;
+  max-width: var(--app-max);
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  padding: var(--space-4) var(--space-5)
+           max(var(--space-7), env(safe-area-inset-bottom));
+  touch-action: none;
+}
+
+.sheet__handle {
+  width: 38px;
+  height: 5px;
+  margin: 0 auto var(--space-5);
+  border-radius: var(--radius-capsule);
+  background: var(--fill-1);
+}
+
+.sheet__title {
+  margin: 0 0 var(--space-2);
+  text-align: center;
+  font-size: var(--text-title-3);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-snug);
+}
+
+.sheet__sub {
+  margin: 0 0 var(--space-6);
+  text-align: center;
+  font-size: var(--text-subhead);
+  color: var(--label-secondary);
+}
+
+.types {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.type {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 60px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--fill-4);
+  color: var(--label);
+  font-size: var(--text-subhead);
+  font-weight: var(--weight-medium);
+  text-align: left;
+  transition: transform var(--duration-instant) var(--ease-out),
+              background-color var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.type:active { transform: scale(0.96); }
+
+.type--selected {
+  background: color-mix(in srgb, var(--type-color) 22%, transparent);
+  box-shadow: inset 0 0 0 1.5px var(--type-color);
+}
+
+.type__emoji { font-size: 1.6rem; line-height: 1; }
+
+/* ---------------------------------------------------------------------------
+   HYPE — ekran nakon spremljenog treninga
+--------------------------------------------------------------------------- */
+
+.hype {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+  padding: var(--space-7);
+  background: rgba(0, 0, 0, 0.62);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+          backdrop-filter: blur(22px) saturate(180%);
+  text-align: center;
+  cursor: pointer;
+}
+
+.hype__media {
+  width: min(78vw, 320px);
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-4);
+}
+
+.hype__emoji { font-size: clamp(4rem, 22vw, 7rem); line-height: 1; }
+
+.hype__text {
+  margin: 0;
+  max-width: 20ch;
+  font-size: clamp(1.5rem, 7vw, var(--text-title-1));
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+  text-wrap: balance;
+}
+
+.hype__dismiss {
+  font-size: var(--text-footnote);
+  color: var(--label-tertiary);
+}
+
+/* ---------------------------------------------------------------------------
+   PRISTUPAČNOST — tri reduced-* postavke koje Apple poštuje, pa i mi.
+--------------------------------------------------------------------------- */
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass, .glass--thick, .glass--thin, .btn--glass, .pin__key, .hype {
+    -webkit-backdrop-filter: none;
+            backdrop-filter: none;
+    background: var(--bg-secondary);
+  }
+  .aurora { display: none; }
+}
+
+@media (prefers-contrast: more) {
+  .glass, .glass--thick, .glass--thin, .pin__key, .type {
+    box-shadow: inset 0 0 0 1px var(--label-secondary);
+  }
+  .subtle, .stat__label, .cal__weekday { color: var(--label); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora__blob { animation: none; }
+}
