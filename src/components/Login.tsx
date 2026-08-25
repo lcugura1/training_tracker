@@ -112,7 +112,9 @@ export function Login({ onSuccess }: LoginProps) {
             transition={transition}
           >
             <h2 className="sheet__title">Tko si ti?</h2>
-            <p className="sheet__sub">Upiši korisničko ime i profil je tvoj.</p>
+            <p className="sheet__sub">
+              Upiši korisničko ime U FORMATU imeprezime, npr. leoncugura i profil je tvoj.
+            </p>
 
             <input
               className="field"
