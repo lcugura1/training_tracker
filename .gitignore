@@ -149,3 +149,6 @@ dist-ssr
 
 # Netlify
 .netlify/
+
+# Netlify dev artefakt
+deno.lock
