@@ -80,3 +80,45 @@ const MONTH_GENITIVE = [
 export function formatLong(date: Date): string {
   return `${DAY_FULL[date.getDay()]}, ${date.getDate()}. ${MONTH_GENITIVE[date.getMonth()]}`;
 }
+
+/** Pozdrav se mijenja po dijelu dana. */
+export function greeting(now = new Date()): string {
+  const h = now.getHours();
+  if (h < 12) return "Dobro jutro";
+  if (h < 18) return "Dobar dan";
+  return "Dobra večer";
+}
+
+export function timeHHMM(now = new Date()): string {
+  return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+}
+
+/**
+ * Najdulji niz ikad — treba za oznaku "novi rekord" na hype ekranu.
+ * Dan se pomiče preko setDate, ne zbrajanjem milisekundi: prelazak na ljetno
+ * računanje vremena čini dan dugim 23 ili 25 sati, pa bi aritmetika pukla.
+ */
+export function longestStreak(entries: Record<string, string>): number {
+  const keys = Object.keys(entries).sort();
+  let best = 0;
+  let run = 0;
+  let previous: string | null = null;
+
+  for (const key of keys) {
+    if (previous) {
+      const next = new Date(`${previous}T00:00:00`);
+      next.setDate(next.getDate() + 1);
+      run = toKey(next) === key ? run + 1 : 1;
+    } else {
+      run = 1;
+    }
+    previous = key;
+    if (run > best) best = run;
+  }
+  return best;
+}
+
+/** Kratki oblik za chip: "25. kolovoza", bez dana u tjednu. */
+export function formatShort(date: Date): string {
+  return `${date.getDate()}. ${MONTH_GENITIVE[date.getMonth()]}`;
+}

@@ -3,15 +3,29 @@ import { motion } from "motion/react";
 import type { HypeMedia } from "../lib/hype";
 
 interface HypeOverlayProps {
-  message: string;
   emoji: string;
+  typeLabel: string;
+  dateLabel: string;
+  message: string;
   media: HypeMedia | null;
+  streak: number;
+  isRecord: boolean;
   onDismiss: () => void;
 }
 
-const AUTO_DISMISS_MS = 4500;
+const AUTO_DISMISS_MS = 6000;
+const transition = { duration: 0.24, ease: [0.2, 0.8, 0.2, 1] as const };
 
-export function HypeOverlay({ message, emoji, media, onDismiss }: HypeOverlayProps) {
+export function HypeOverlay({
+  emoji,
+  typeLabel,
+  dateLabel,
+  message,
+  media,
+  streak,
+  isRecord,
+  onDismiss,
+}: HypeOverlayProps) {
   useEffect(() => {
     const timer = setTimeout(onDismiss, AUTO_DISMISS_MS);
     return () => clearTimeout(timer);
@@ -22,33 +36,50 @@ export function HypeOverlay({ message, emoji, media, onDismiss }: HypeOverlayPro
       className="hype"
       role="alertdialog"
       aria-label={message}
-      onClick={onDismiss}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
+      transition={transition}
     >
       <motion.div
-        initial={{ scale: 0.7, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        // Odskok je ovdje opravdan: slavlje, ne obična promjena stanja.
-        transition={{ type: "spring", bounce: 0.35, visualDuration: 0.45 }}
-        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-6)" }}
+        className="hype__inner"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={transition}
       >
-        {media ? (
-          media.kind === "video" ? (
-            <video className="hype__media" src={media.url} autoPlay loop muted playsInline />
-          ) : (
-            <img className="hype__media" src={media.url} alt="" />
-          )
-        ) : (
-          <span className="hype__emoji">{emoji}</span>
-        )}
+        <div className="hype__chip">
+          <span className="hype__chip-emoji">{emoji}</span>
+          <span>{typeLabel} · {dateLabel}</span>
+        </div>
 
-        <p className="hype__text">{message}</p>
+        <div className="hype__card">
+          <div className="hype__slot">
+            {media ? (
+              media.kind === "video" ? (
+                <video className="hype__media" src={media.url} autoPlay loop muted playsInline />
+              ) : (
+                <img className="hype__media" src={media.url} alt="" />
+              )
+            ) : (
+              <span className="hype__slot-emoji">{emoji}</span>
+            )}
+          </div>
+
+          <p className="hype__text">{message}</p>
+
+          <div className="hype__footer">
+            <span className="tnum">{streak}</span>
+            <span className="hype__footer-note">
+              {streak === 1 ? "dan u nizu" : "dana u nizu"}
+              {isRecord ? " · novi rekord" : ""}
+            </span>
+          </div>
+        </div>
+
+        <button type="button" className="cta" onClick={onDismiss}>
+          Idemo dalje
+        </button>
       </motion.div>
-
-      <span className="hype__dismiss">dodirni za zatvaranje</span>
     </motion.div>
   );
 }

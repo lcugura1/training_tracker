@@ -9,16 +9,17 @@ const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"];
 export function PinPad({ value, onChange, disabled = false }: PinPadProps) {
   function press(key: string) {
     if (disabled) return;
-    if (key === "⌫") {
-      onChange(value.slice(0, -1));
-    } else if (key !== "" && value.length < 4) {
-      onChange(value + key);
-    }
+    if (key === "⌫") onChange(value.slice(0, -1));
+    else if (key !== "" && value.length < 4) onChange(value + key);
   }
 
   return (
     <div>
-      <div className="pin__dots" role="status" aria-label={`Uneseno ${value.length} od 4 znamenke`}>
+      <div
+        className="pin__dots"
+        role="status"
+        aria-label={`Uneseno ${value.length} od 4 znamenke`}
+      >
         {[0, 1, 2, 3].map((i) => (
           <span
             key={i}

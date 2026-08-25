@@ -9,8 +9,7 @@ interface LoginProps {
   onSuccess: (session: Session, profile: Profile, created: boolean) => void;
 }
 
-/** Kritično prigušena opruga — bez odskoka, jer ovo nije gesta nego prijelaz. */
-const spring = { type: "spring", bounce: 0, visualDuration: 0.35 } as const;
+const transition = { duration: 0.2, ease: [0.2, 0.8, 0.2, 1] as const };
 
 export function Login({ onSuccess }: LoginProps) {
   const [step, setStep] = useState<Step>("username");
@@ -34,8 +33,7 @@ export function Login({ onSuccess }: LoginProps) {
     setBusy(true);
     setError("");
     try {
-      const found = await checkUsername(trimmed);
-      setExists(found);
+      setExists(await checkUsername(trimmed));
       setStep("pin");
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Nešto je puklo.");
@@ -96,25 +94,22 @@ export function Login({ onSuccess }: LoginProps) {
   }
 
   return (
-    <div className="app__inner" style={{ marginTop: "12vh" }}>
-      <header style={{ textAlign: "center", marginBottom: "var(--space-6)" }}>
-        <h1 className="title-xl">Trening<br />Tracker</h1>
-        <p className="subtle" style={{ marginTop: "var(--space-4)" }}>
-          Evidencija koja te ne mazi.
-        </p>
+    <div className="auth">
+      <header className="auth__brand">
+        <h1 className="auth__title">Trening<br />Tracker</h1>
+        <p className="auth__tagline">Evidencija koja te ne mazi.</p>
       </header>
 
       <AnimatePresence mode="wait" initial={false}>
         {step === "username" ? (
           <motion.form
             key="username"
-            className="glass glass--liquid"
-            style={{ padding: "var(--space-7)" }}
+            className="glass auth__card"
             onSubmit={submitUsername}
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={spring}
+            exit={{ opacity: 0, y: -8 }}
+            transition={transition}
           >
             <h2 className="sheet__title">Tko si ti?</h2>
             <p className="sheet__sub">Upiši korisničko ime i profil je tvoj.</p>
@@ -133,12 +128,11 @@ export function Login({ onSuccess }: LoginProps) {
               autoFocus
             />
 
-            <p className="error" style={{ margin: "var(--space-4) 0" }}>{error}</p>
+            <p className="error">{error}</p>
 
             <button
               type="submit"
-              className="btn btn--primary"
-              style={{ width: "100%" }}
+              className="cta"
               disabled={busy || username.trim().length < 3}
             >
               {busy ? "Provjeravam…" : "Dalje"}
@@ -147,19 +141,14 @@ export function Login({ onSuccess }: LoginProps) {
         ) : (
           <motion.div
             key="pin"
-            className="glass glass--liquid"
-            style={{ padding: "var(--space-7)" }}
-            initial={{ opacity: 0, y: 12 }}
+            className="glass auth__card"
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={spring}
+            exit={{ opacity: 0, y: -8 }}
+            transition={transition}
           >
             <h2 className="sheet__title">
-              {step === "confirm"
-                ? "Ponovi PIN"
-                : exists
-                  ? "Upiši PIN"
-                  : "Postavi PIN"}
+              {step === "confirm" ? "Ponovi PIN" : exists ? "Upiši PIN" : "Postavi PIN"}
             </h2>
             <p className="sheet__sub">
               {step === "confirm"
@@ -171,9 +160,14 @@ export function Login({ onSuccess }: LoginProps) {
 
             <PinPad value={pin} onChange={setPin} disabled={busy} />
 
-            <p className="error" style={{ marginTop: "var(--space-5)" }}>{error}</p>
+            <p className="error">{error}</p>
 
-            <button type="button" className="btn btn--ghost" style={{ width: "100%" }} onClick={back}>
+            <button
+              type="button"
+              className="pill"
+              style={{ alignSelf: "center" }}
+              onClick={back}
+            >
               ← Natrag
             </button>
           </motion.div>

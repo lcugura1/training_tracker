@@ -11,8 +11,9 @@ interface TrainingSheetProps {
   onClose: () => void;
 }
 
-/** Appleove ship vrijednosti za ladice: damping 0.8 / response 0.3. */
-const sheetSpring = { type: "spring", bounce: 0.2, visualDuration: 0.3 } as const;
+/** Dizajn traži jedno easing i kratka trajanja — bez opruga i odskoka. */
+const ease = [0.2, 0.8, 0.2, 1] as const;
+const transition = { duration: 0.22, ease };
 
 const DISMISS_OFFSET = 110;
 const DISMISS_VELOCITY = 520;
@@ -28,8 +29,8 @@ export function TrainingSheet({
   const [selected, setSelected] = useState<TrainingType | null>(initialType ?? null);
 
   function handleDragEnd(_: unknown, info: PanInfo) {
-    // Povlačenje se zatvara ili po prijeđenom putu ili po brzini otpuštanja —
-    // brz flick mora raditi i kad prst nije stigao daleko.
+    // Zatvara se ili po prijeđenom putu ili po brzini otpuštanja — brz flick
+    // mora raditi i kad prst nije stigao daleko.
     if (info.offset.y > DISMISS_OFFSET || info.velocity.y > DISMISS_VELOCITY) {
       onClose();
     }
@@ -43,18 +44,18 @@ export function TrainingSheet({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
+        transition={transition}
       />
 
       <motion.div
-        className="glass glass--thick sheet"
+        className="sheet"
         role="dialog"
         aria-modal="true"
         aria-label={`Označi trening — ${dateLabel}`}
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        exit={{ y: "100%" }}
-        transition={sheetSpring}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 8 }}
+        transition={transition}
         drag="y"
         dragConstraints={{ top: 0 }}
         dragElastic={0.18}
@@ -74,7 +75,6 @@ export function TrainingSheet({
                 key={type}
                 type="button"
                 className={`type ${isSelected ? "type--selected" : ""}`}
-                style={{ "--type-color": meta.color } as React.CSSProperties}
                 onClick={() => setSelected(type)}
                 aria-pressed={isSelected}
               >
@@ -85,12 +85,11 @@ export function TrainingSheet({
           })}
         </div>
 
-        <p className="error" style={{ marginBottom: "var(--space-4)" }}>{error}</p>
+        {error && <p className="error">{error}</p>}
 
         <button
           type="button"
-          className="btn btn--primary"
-          style={{ width: "100%" }}
+          className="cta"
           disabled={!selected || busy}
           onClick={() => selected && onSave(selected)}
         >

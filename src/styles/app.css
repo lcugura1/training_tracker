@@ -1,17 +1,36 @@
-@import "./tokens.css";
-
 /* ===========================================================================
-   Aplikacija je dark-only (html[data-theme="dark"]), pa ovdje samo pojačavamo
-   podlogu: tokeni daju čisto crno, a staklu treba dublja, obojena pozadina da
-   bi refrakcija i specular rub uopće imali što lomiti.
+   Trening Tracker — dizajn sustav
+   Vrijednosti dolaze iz design_handoff_trening_tracker/README.md.
+   Jedna zelena nosi sve; amber postoji samo za poruku srama.
    =========================================================================== */
 
 :root {
-  --ground: #06070c;
-  --ground-2: #0b0d16;
-  --glass-rim: rgba(255, 255, 255, 0.10);
-  --glass-specular: rgba(255, 255, 255, 0.16);
+  --bg: #04060A;
+  --accent: #22C55E;
+  --accent-pressed: #16A34A;
+  --on-accent: #062911;
+
+  --text: #FFFFFF;
+  --text-muted: #9CA3AF;
+  --text-subtle: #6B7280;
+  --text-weekday: #4B5563;
+  --text-future: #374151;
+
+  --amber: #F5B400;
+  --amber-text: #F5D680;
+  --amber-fill: rgba(245, 180, 0, 0.10);
+
+  --hairline: rgba(255, 255, 255, 0.06);
+  --hairline-strong: rgba(255, 255, 255, 0.12);
+
+  /* Bez opruga — dizajn traži jedno easing i kratka trajanja. */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-press: 100ms;
+  --dur-base: 200ms;
+
   --app-max: 460px;
+
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -20,109 +39,128 @@ html, body, #root { height: 100%; }
 
 body {
   margin: 0;
-  background: var(--ground);
-  color: var(--label);
-  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 16px;
   -webkit-font-smoothing: antialiased;
-  /* iOS: spriječi bounce scroll koji otkriva bijelu podlogu ispod aurore */
   overscroll-behavior-y: none;
 }
 
 button { font: inherit; color: inherit; }
 
+/* Brojevi se ne smiju micati dok se mijenjaju. */
+.tnum { font-variant-numeric: tabular-nums; }
+
 /* ---------------------------------------------------------------------------
-   AURORA — spori gradijentni blobovi iza stakla. Animiramo isključivo transform
-   (nikad filter ili position), pa ovo ostaje na compositoru i ne trza.
+   POZADINA — tri mekana kruga svjetla, vignette i zrno.
+   Animira se isključivo transform; filter i position nikad.
 --------------------------------------------------------------------------- */
 
-.aurora {
+.bg {
   position: fixed;
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  background:
-    radial-gradient(120% 80% at 50% 0%, var(--ground-2) 0%, var(--ground) 60%);
   pointer-events: none;
+  background: var(--bg);
 }
 
-.aurora__blob {
+.bg__orb {
   position: absolute;
-  width: 62vmax;
-  height: 62vmax;
   border-radius: 50%;
-  filter: blur(70px);
-  opacity: 0.55;
   will-change: transform;
 }
 
-.aurora__blob--1 {
-  background: radial-gradient(circle, #3b1f8f 0%, transparent 65%);
-  top: -22vmax; left: -18vmax;
-  animation: drift-1 26s ease-in-out infinite alternate;
-}
-.aurora__blob--2 {
-  background: radial-gradient(circle, #0a4d8c 0%, transparent 65%);
-  top: 18vmax; right: -26vmax;
-  animation: drift-2 32s ease-in-out infinite alternate;
-}
-.aurora__blob--3 {
-  background: radial-gradient(circle, #8c1f5a 0%, transparent 65%);
-  bottom: -28vmax; left: 8vmax;
-  animation: drift-3 38s ease-in-out infinite alternate;
+.bg__orb--1 {
+  top: -18vmax; left: -10vmax;
+  width: 56vmax; height: 56vmax;
+  filter: blur(90px);
+  opacity: 0.5;
+  background: radial-gradient(circle, #127A47 0%, transparent 65%);
+  animation: drift1 28s ease-in-out infinite alternate;
 }
 
-@keyframes drift-1 {
+.bg__orb--2 {
+  top: 20vmax; right: -22vmax;
+  width: 52vmax; height: 52vmax;
+  filter: blur(100px);
+  opacity: 0.38;
+  background: radial-gradient(circle, #0B5A6B 0%, transparent 65%);
+  animation: drift2 34s ease-in-out infinite alternate;
+}
+
+.bg__orb--3 {
+  bottom: -24vmax; left: 22vmax;
+  width: 48vmax; height: 48vmax;
+  filter: blur(90px);
+  opacity: 0.32;
+  background: radial-gradient(circle, #15A05A 0%, transparent 65%);
+  animation: drift3 40s ease-in-out infinite alternate;
+}
+
+.bg__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    120% 60% at 50% 0%,
+    rgba(34, 197, 94, 0.12) 0%,
+    rgba(34, 197, 94, 0.04) 32%,
+    transparent 62%
+  );
+}
+
+/* Zrno ubija banding na velikim blur plohama. */
+.bg__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  filter: url(#grain);
+  mix-blend-mode: overlay;
+}
+
+@keyframes drift1 {
   from { transform: translate3d(0, 0, 0) scale(1); }
-  to   { transform: translate3d(12vmax, 8vmax, 0) scale(1.18); }
+  to   { transform: translate3d(90px, 70px, 0) scale(1.25); }
 }
-@keyframes drift-2 {
-  from { transform: translate3d(0, 0, 0) scale(1.1); }
-  to   { transform: translate3d(-14vmax, 12vmax, 0) scale(0.92); }
+@keyframes drift2 {
+  from { transform: translate3d(0, 0, 0) scale(1.15); }
+  to   { transform: translate3d(-110px, 90px, 0) scale(0.9); }
 }
-@keyframes drift-3 {
+@keyframes drift3 {
   from { transform: translate3d(0, 0, 0) scale(0.95); }
-  to   { transform: translate3d(10vmax, -12vmax, 0) scale(1.2); }
+  to   { transform: translate3d(70px, -80px, 0) scale(1.2); }
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50%      { transform: scale(1.04); opacity: 1; }
+}
+@keyframes sheen {
+  from { transform: translateX(-120%); }
+  to   { transform: translateX(220%); }
 }
 
 /* ---------------------------------------------------------------------------
-   GLASS — puni recept: translucencija + blur/saturate + specular gornji rub +
-   hairline obrub + dubinska sjena. Sam blur bi bio glassmorphism iz 2020.
+   STAKLO — nikad ne slaži dva prozirna sloja jedan na drugi.
 --------------------------------------------------------------------------- */
 
 .glass {
-  background: var(--material-regular-tint);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-          backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(255, 255, 255, 0.055);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+          backdrop-filter: blur(28px) saturate(180%);
   box-shadow:
-    inset 0 1px 0 var(--glass-specular),
+    inset 0 1px 0 rgba(255, 255, 255, 0.20),
     inset 0 0 0 0.5px rgba(255, 255, 255, 0.06),
-    0 0 0 0.5px rgba(0, 0, 0, 0.4),
-    var(--shadow-glass);
-  border-radius: var(--radius-xl);
-}
-
-.glass--thick {
-  background: var(--material-thick-tint);
-  -webkit-backdrop-filter: blur(34px) saturate(180%);
-          backdrop-filter: blur(34px) saturate(180%);
+    0 18px 40px rgba(0, 0, 0, 0.5);
 }
 
 .glass--thin {
-  background: var(--material-thin-tint);
-  -webkit-backdrop-filter: blur(14px) saturate(170%);
-          backdrop-filter: blur(14px) saturate(170%);
-}
-
-/* Refrakcija — progresivno poboljšanje, hero elementi. Chromium podržava
-   url() kao backdrop ulaz; ostali dobiju čisto staklo iznad. */
-.glass--liquid {
-  backdrop-filter: blur(20px) saturate(180%) url(#liquid-refraction);
-}
-@supports not (backdrop-filter: url(#liquid-refraction)) {
-  .glass--liquid {
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-            backdrop-filter: blur(20px) saturate(180%);
-  }
+  background: rgba(255, 255, 255, 0.05);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+          backdrop-filter: blur(16px) saturate(170%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.07);
 }
 
 /* ---------------------------------------------------------------------------
@@ -134,12 +172,11 @@ button { font: inherit; color: inherit; }
   z-index: 1;
   min-height: 100%;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  justify-content: center;
   padding:
-    max(var(--space-6), env(safe-area-inset-top))
-    var(--space-5)
-    max(var(--space-8), env(safe-area-inset-bottom));
+    max(56px, calc(env(safe-area-inset-top) + 20px))
+    20px
+    max(20px, env(safe-area-inset-bottom));
 }
 
 .app__inner {
@@ -147,276 +184,250 @@ button { font: inherit; color: inherit; }
   max-width: var(--app-max);
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: 16px;
 }
 
-/* Tracking se steže kako tekst raste — najveći "ovo nije Apple" propust je
-   jedan globalni letter-spacing. */
-.title-xl {
-  margin: 0;
-  font-size: clamp(2rem, 9vw, var(--text-large-title));
-  font-weight: var(--weight-bold);
-  letter-spacing: var(--tracking-tight);
-  line-height: var(--leading-tight);
+/* Dok je sheet otvoren, sadržaj iza se povlači u drugi plan. */
+.app__content {
+  transition: filter var(--dur-base) var(--ease),
+              opacity var(--dur-base) var(--ease);
 }
-
-.title-md {
-  margin: 0;
-  font-size: var(--text-title-3);
-  font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-snug);
-}
-
-.subtle {
-  color: var(--label-secondary);
-  font-size: var(--text-subhead);
-  letter-spacing: var(--tracking-normal);
-  margin: 0;
+.app__content--dimmed {
+  filter: blur(7px);
+  opacity: 0.45;
+  pointer-events: none;
 }
 
 /* ---------------------------------------------------------------------------
-   KONTROLE — povratna informacija ide na pointer-down, nikad tek na otpuštanju.
---------------------------------------------------------------------------- */
-
-.btn {
-  appearance: none;
-  border: 0;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
-  min-height: 52px;
-  padding: 0 var(--space-6);
-  border-radius: var(--radius-capsule);
-  font-size: var(--text-headline);
-  font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-snug);
-  transition: transform var(--duration-instant) var(--ease-out),
-              opacity var(--duration-instant) var(--ease-out);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.btn:active:not(:disabled) { transform: scale(0.97); }
-.btn:disabled { opacity: 0.4; cursor: default; }
-
-.btn--primary {
-  background: var(--accent);
-  color: #fff;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), var(--shadow-3);
-}
-
-.btn--glass {
-  background: var(--material-thin-tint);
-  -webkit-backdrop-filter: blur(14px) saturate(170%);
-          backdrop-filter: blur(14px) saturate(170%);
-  color: var(--label);
-  box-shadow: inset 0 1px 0 var(--glass-specular),
-              0 0 0 0.5px rgba(255, 255, 255, 0.08);
-}
-
-.btn--ghost {
-  background: transparent;
-  color: var(--label-secondary);
-  min-height: 44px;
-  font-weight: var(--weight-medium);
-  font-size: var(--text-subhead);
-}
-
-:where(button, input, [tabindex]):focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
-
-.field {
-  width: 100%;
-  min-height: 54px;
-  padding: 0 var(--space-5);
-  border: 0;
-  border-radius: var(--radius-lg);
-  background: var(--fill-3);
-  color: var(--label);
-  font-size: var(--text-title-3);
-  font-weight: var(--weight-medium);
-  letter-spacing: var(--tracking-snug);
-  text-align: center;
-}
-
-.field::placeholder {
-  color: var(--label-tertiary);
-  font-weight: var(--weight-regular);
-  letter-spacing: var(--tracking-normal);
-}
-
-.error {
-  margin: 0;
-  color: var(--red);
-  font-size: var(--text-footnote);
-  text-align: center;
-  min-height: 1.2em;
-}
-
-/* ---------------------------------------------------------------------------
-   PIN — četiri točke plus vlastita tipkovnica. Nativna numerička tipkovnica bi
-   na mobitelu prekrila pola ekrana, pa je radimo sami.
---------------------------------------------------------------------------- */
-
-.pin__dots {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-5);
-  margin: var(--space-6) 0;
-}
-
-.pin__dot {
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  background: var(--fill-2);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-  transition: transform var(--duration-fast) var(--ease-out),
-              background-color var(--duration-fast) var(--ease-out);
-}
-
-.pin__dot--filled {
-  background: var(--accent);
-  transform: scale(1.18);
-}
-
-.pin__pad {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-4);
-}
-
-.pin__key {
-  appearance: none;
-  border: 0;
-  cursor: pointer;
-  aspect-ratio: 1.55;
-  border-radius: var(--radius-lg);
-  background: var(--material-thin-tint);
-  -webkit-backdrop-filter: blur(14px) saturate(170%);
-          backdrop-filter: blur(14px) saturate(170%);
-  box-shadow: inset 0 1px 0 var(--glass-specular),
-              0 0 0 0.5px rgba(255, 255, 255, 0.07);
-  color: var(--label);
-  font-size: var(--text-title-2);
-  font-weight: var(--weight-medium);
-  transition: transform var(--duration-instant) var(--ease-out),
-              background-color var(--duration-instant) var(--ease-out);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.pin__key:active { transform: scale(0.94); background: var(--fill-1); }
-.pin__key--blank { background: none; box-shadow: none; cursor: default; }
-.pin__key:disabled { opacity: 0.35; }
-
-/* ---------------------------------------------------------------------------
-   ZAGLAVLJE I STATISTIKA
+   ZAGLAVLJE
 --------------------------------------------------------------------------- */
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
+  gap: 12px;
 }
 
-.stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
+.header__text { display: flex; flex-direction: column; gap: 4px; }
+
+.header__greeting {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
-.stat {
-  padding: var(--space-5);
-  text-align: center;
-}
-
-.stat__value {
-  display: block;
-  font-size: var(--text-large-title);
-  font-weight: var(--weight-bold);
-  letter-spacing: var(--tracking-tight);
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.stat__label {
-  display: block;
-  margin-top: var(--space-3);
-  font-size: var(--text-caption-1);
-  font-weight: var(--weight-medium);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--label-secondary);
+.header__date {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-muted);
 }
 
 /* ---------------------------------------------------------------------------
-   PORUKA SRAMA
+   GUMBI
 --------------------------------------------------------------------------- */
 
-.shame {
+.cta {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 56px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 8px 24px rgba(34, 197, 94, 0.30);
+  transition: transform var(--dur-press) var(--ease),
+              background-color var(--dur-press) var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cta:active:not(:disabled) {
+  transform: scale(0.97);
+  background: var(--accent-pressed);
+}
+
+.cta:disabled { opacity: 0.4; cursor: default; }
+
+/* Pulsira samo dok dan nije označen — poziv na akciju, ne ukras. */
+.cta--pulse { animation: pulse 2.6s ease-in-out infinite; }
+.cta--pulse:active { animation: none; }
+
+.pill {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: transform var(--dur-press) var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pill:active { transform: scale(0.97); }
+
+.icon-btn {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  font-size: 15px;
+  transition: transform var(--dur-press) var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.icon-btn:active:not(:disabled) { transform: scale(0.97); }
+.icon-btn:disabled { opacity: 0.35; cursor: default; }
+
+:where(button, input, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow:
+    inset 0 0 0 1.5px var(--accent),
+    0 0 0 6px rgba(34, 197, 94, 0.18);
+}
+
+/* ---------------------------------------------------------------------------
+   STATISTIKA — jedna kartica s razdjelnikom, ne dvije
+--------------------------------------------------------------------------- */
+
+.stats {
   position: relative;
-  padding: var(--space-6);
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  align-items: center;
+  padding: 22px 8px;
+  border-radius: 34px;
   overflow: hidden;
 }
 
-.shame::before {
-  content: "";
+/* Dijagonalni odsjaj koji polako prelazi preko kartice. */
+.stats__sheen {
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--red);
-  opacity: 0.16;
-  mix-blend-mode: plus-lighter;
+  top: 0;
+  left: 0;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.10),
+    transparent
+  );
+  animation: sheen 7s ease-in-out infinite;
   pointer-events: none;
 }
 
-.shame__label {
-  margin: 0 0 var(--space-3);
-  font-size: var(--text-caption-1);
-  font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-wide);
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat__value {
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.stat__value--accent { color: var(--accent); }
+
+.stat__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--red);
+  color: var(--text-subtle);
+}
+
+.stats__divider {
+  width: 1px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.10);
+}
+
+/* ---------------------------------------------------------------------------
+   PORUKA SRAMA — jedini amber u aplikaciji
+--------------------------------------------------------------------------- */
+
+.shame {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 22px;
+  background: var(--amber-fill);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+          backdrop-filter: blur(20px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 0 0 0.5px rgba(245, 180, 0, 0.30);
+}
+
+.shame__dot {
+  flex: 0 0 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 12px rgba(245, 180, 0, 0.8);
 }
 
 .shame__text {
   margin: 0;
-  font-size: var(--text-title-3);
-  font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-snug);
-  line-height: var(--leading-snug);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--amber-text);
 }
 
 /* ---------------------------------------------------------------------------
-   KALENDAR
+   KALENDAR — dani su krugovi
 --------------------------------------------------------------------------- */
 
-.cal { padding: var(--space-5); }
+.cal {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 16px 22px;
+  border-radius: 32px;
+}
 
 .cal__head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-5);
-  padding: 0 var(--space-2);
 }
 
 .cal__month {
   margin: 0;
-  font-size: var(--text-title-3);
-  font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-snug);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
-.cal__year {
-  font-size: var(--text-subhead);
-  color: var(--label-tertiary);
-  font-variant-numeric: tabular-nums;
-}
+.cal__year { color: var(--text-subtle); font-weight: 500; }
 
 .cal__weekdays,
 .cal__grid {
@@ -425,17 +436,12 @@ button { font: inherit; color: inherit; }
   gap: 6px;
 }
 
-.cal__weekdays {
-  margin-bottom: var(--space-3);
-}
-
 .cal__weekday {
   text-align: center;
-  font-size: var(--text-caption-2);
-  font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--label-tertiary);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-weekday);
 }
 
 .cal__cell {
@@ -443,82 +449,59 @@ button { font: inherit; color: inherit; }
   border: 0;
   padding: 0;
   aspect-ratio: 1;
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-md);
-  background: var(--fill-4);
-  color: var(--label-secondary);
-  font-size: var(--text-subhead);
-  font-weight: var(--weight-medium);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-future);
   font-variant-numeric: tabular-nums;
-  transition: transform var(--duration-instant) var(--ease-out);
+  transition: transform var(--dur-press) var(--ease);
   -webkit-tap-highlight-color: transparent;
 }
 
-.cal__cell--empty { background: none; }
-
-/* Budući dani se ne mogu označiti — dan još nije ni počeo. */
-.cal__cell--future { opacity: 0.28; }
-
-/* Prošli neoznačeni dani ostaju vidljivi kao podsjetnik, ali su zaključani. */
-.cal__cell--past { opacity: 0.55; }
-
-.cal__cell--today {
-  color: var(--label);
-  font-weight: var(--weight-bold);
-  cursor: pointer;
-  box-shadow: inset 0 0 0 2px var(--accent);
+/* Prošli dan bez treninga: vidljiv, ali zaključan. */
+.cal__cell--past {
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 14px;
+  color: var(--text-subtle);
 }
 
-.cal__cell--today:active { transform: scale(0.92); }
+/* Danas prije označavanja: aktivan, ali još bez zelene. */
+.cal__cell--today {
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.cal__cell--today:active { transform: scale(0.97); }
 
 .cal__cell--done {
-  background: var(--fill-2);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--cell-color) 55%, transparent),
-    0 0 16px -4px color-mix(in srgb, var(--cell-color) 70%, transparent);
-}
-
-.cal__cell--done.cal__cell--today {
-  box-shadow:
-    inset 0 0 0 2px var(--cell-color),
-    0 0 20px -4px color-mix(in srgb, var(--cell-color) 80%, transparent);
-}
-
-.cal__emoji {
-  font-size: 1.35rem;
-  line-height: 1;
-}
-
-.cal__daynum {
-  position: absolute;
-  top: 3px;
-  left: 5px;
-  font-size: 0.5625rem;
-  font-weight: var(--weight-semibold);
-  opacity: 0.5;
+  background: rgba(34, 197, 94, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.45);
+  font-size: 16px;
 }
 
 .cal__hint {
-  margin: var(--space-5) 0 0;
+  margin: 0;
   text-align: center;
-  font-size: var(--text-caption-1);
-  color: var(--label-tertiary);
+  font-size: 12px;
+  color: var(--text-subtle);
 }
 
 /* ---------------------------------------------------------------------------
    BOTTOM SHEET
 --------------------------------------------------------------------------- */
 
+/* Scrim je namjerno flat — blur radi sadržaj ispod (.app__content--dimmed). */
 .scrim {
   position: fixed;
   inset: 0;
   z-index: 20;
-  background: rgba(0, 0, 0, 0.5);
-  -webkit-backdrop-filter: blur(3px);
-          backdrop-filter: blur(3px);
+  background: rgba(0, 0, 0, 0.45);
 }
 
 .sheet {
@@ -530,40 +513,56 @@ button { font: inherit; color: inherit; }
   margin: 0 auto;
   width: 100%;
   max-width: var(--app-max);
-  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
-  padding: var(--space-4) var(--space-5)
-           max(var(--space-7), env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 14px 20px max(28px, env(safe-area-inset-bottom));
+  border-radius: 34px 34px 0 0;
+  background: rgba(255, 255, 255, 0.07);
+  -webkit-backdrop-filter: blur(34px) saturate(185%);
+          backdrop-filter: blur(34px) saturate(185%) url(#liquid-refraction);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.07),
+    0 -20px 60px rgba(0, 0, 0, 0.6);
   touch-action: none;
 }
 
+/* Refrakcija je jedini hero moment; gdje je nema, ostaje čisto staklo. */
+@supports not (backdrop-filter: url(#liquid-refraction)) {
+  .sheet {
+    -webkit-backdrop-filter: blur(34px) saturate(185%);
+            backdrop-filter: blur(34px) saturate(185%);
+  }
+}
+
 .sheet__handle {
-  width: 38px;
+  width: 44px;
   height: 5px;
-  margin: 0 auto var(--space-5);
-  border-radius: var(--radius-capsule);
-  background: var(--fill-1);
+  margin: 0 auto;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .sheet__title {
-  margin: 0 0 var(--space-2);
+  margin: 0;
   text-align: center;
-  font-size: var(--text-title-3);
-  font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-snug);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .sheet__sub {
-  margin: 0 0 var(--space-6);
+  margin: -12px 0 0;
   text-align: center;
-  font-size: var(--text-subhead);
-  color: var(--label-secondary);
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 .types {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-4);
-  margin-bottom: var(--space-6);
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .type {
@@ -572,96 +571,281 @@ button { font: inherit; color: inherit; }
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: var(--space-4);
-  min-height: 60px;
-  padding: 0 var(--space-4);
-  border-radius: var(--radius-lg);
-  background: var(--fill-4);
-  color: var(--label);
-  font-size: var(--text-subhead);
-  font-weight: var(--weight-medium);
+  gap: 12px;
+  height: 58px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+          backdrop-filter: blur(16px) saturate(170%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
   text-align: left;
-  transition: transform var(--duration-instant) var(--ease-out),
-              background-color var(--duration-fast) var(--ease-out),
-              box-shadow var(--duration-fast) var(--ease-out);
+  transition: transform var(--dur-press) var(--ease),
+              background-color var(--dur-base) var(--ease),
+              box-shadow var(--dur-base) var(--ease);
   -webkit-tap-highlight-color: transparent;
 }
 
-.type:active { transform: scale(0.96); }
+.type:active { transform: scale(0.97); }
 
 .type--selected {
-  background: color-mix(in srgb, var(--type-color) 22%, transparent);
-  box-shadow: inset 0 0 0 1.5px var(--type-color);
+  background: rgba(34, 197, 94, 0.16);
+  box-shadow:
+    inset 0 0 0 1.5px var(--accent),
+    0 8px 22px rgba(34, 197, 94, 0.22);
+  font-weight: 700;
 }
 
-.type__emoji { font-size: 1.6rem; line-height: 1; }
+.type__emoji { font-size: 20px; line-height: 1; }
 
 /* ---------------------------------------------------------------------------
-   HYPE — ekran nakon spremljenog treninga
+   HYPE
 --------------------------------------------------------------------------- */
 
 .hype {
   position: fixed;
   inset: 0;
   z-index: 30;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-6);
-  padding: var(--space-7);
-  background: rgba(0, 0, 0, 0.62);
-  -webkit-backdrop-filter: blur(22px) saturate(180%);
-          backdrop-filter: blur(22px) saturate(180%);
+  gap: 20px;
+  padding: 56px 20px max(28px, env(safe-area-inset-bottom));
+  background: rgba(4, 6, 10, 0.72);
+  -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
+}
+
+.hype__inner {
+  width: 100%;
+  max-width: var(--app-max);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.hype__chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+          backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.hype__chip-emoji { font-size: 15px; }
+
+.hype__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  padding: 28px 22px 26px;
+  border-radius: 36px;
+  background: rgba(255, 255, 255, 0.07);
+  -webkit-backdrop-filter: blur(30px) saturate(185%);
+          backdrop-filter: blur(30px) saturate(185%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.08),
+    0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+.hype__slot {
+  width: 100%;
+  aspect-ratio: 1.1;
+  border-radius: 26px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  cursor: pointer;
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 0 0 1.5px rgba(34, 197, 94, 0.35);
 }
 
 .hype__media {
-  width: min(78vw, 320px);
-  aspect-ratio: 1;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-4);
 }
 
-.hype__emoji { font-size: clamp(4rem, 22vw, 7rem); line-height: 1; }
+.hype__slot-emoji { font-size: clamp(3.5rem, 20vw, 6rem); line-height: 1; }
 
 .hype__text {
   margin: 0;
-  max-width: 20ch;
-  font-size: clamp(1.5rem, 7vw, var(--text-title-1));
-  font-weight: var(--weight-bold);
-  letter-spacing: var(--tracking-tight);
-  line-height: var(--leading-tight);
-  text-wrap: balance;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-align: center;
+  text-wrap: pretty;
 }
 
-.hype__dismiss {
-  font-size: var(--text-footnote);
-  color: var(--label-tertiary);
+.hype__footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
 }
+
+.hype__footer-note { color: var(--text-subtle); font-weight: 500; }
 
 /* ---------------------------------------------------------------------------
-   PRISTUPAČNOST — tri reduced-* postavke koje Apple poštuje, pa i mi.
+   PRIJAVA
 --------------------------------------------------------------------------- */
 
+.auth {
+  width: 100%;
+  max-width: var(--app-max);
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth__brand { text-align: center; margin-bottom: 4px; }
+
+.auth__title {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.auth__tagline {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.auth__card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 26px 22px;
+  border-radius: 34px;
+}
+
+.field {
+  width: 100%;
+  height: 56px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.field::placeholder { color: var(--text-subtle); font-weight: 400; }
+
+.error {
+  margin: 0;
+  min-height: 1.2em;
+  text-align: center;
+  font-size: 13px;
+  color: #F87171;
+}
+
+.pin__dots {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 4px 0 8px;
+}
+
+.pin__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.10);
+  transition: transform var(--dur-base) var(--ease),
+              background-color var(--dur-base) var(--ease),
+              box-shadow var(--dur-base) var(--ease);
+}
+
+.pin__dot--filled {
+  background: var(--accent);
+  transform: scale(1.15);
+  box-shadow: 0 0 14px rgba(34, 197, 94, 0.55);
+}
+
+.pin__pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.pin__key {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  height: 56px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+          backdrop-filter: blur(16px) saturate(170%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transition: transform var(--dur-press) var(--ease),
+              background-color var(--dur-press) var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pin__key:active:not(:disabled) {
+  transform: scale(0.97);
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.pin__key--blank { background: none; box-shadow: none; cursor: default; }
+.pin__key:disabled { opacity: 0.35; }
+
+/* ---------------------------------------------------------------------------
+   PRISTUPAČNOST
+--------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .bg__orb, .cta--pulse, .stats__sheen { animation: none; }
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+  }
+}
+
 @media (prefers-reduced-transparency: reduce) {
-  .glass, .glass--thick, .glass--thin, .btn--glass, .pin__key, .hype {
+  .glass, .glass--thin, .sheet, .hype__card, .type, .pin__key, .hype {
     -webkit-backdrop-filter: none;
             backdrop-filter: none;
-    background: var(--bg-secondary);
+    background: #12161C;
   }
-  .aurora { display: none; }
+  .bg__orb, .bg__grain { display: none; }
 }
 
 @media (prefers-contrast: more) {
-  .glass, .glass--thick, .glass--thin, .pin__key, .type {
-    box-shadow: inset 0 0 0 1px var(--label-secondary);
+  .glass, .glass--thin, .sheet, .hype__card, .type, .pin__key {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
   }
-  .subtle, .stat__label, .cal__weekday { color: var(--label); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .aurora__blob { animation: none; }
+  .cal__weekday, .stat__label, .cal__hint { color: var(--text-muted); }
 }

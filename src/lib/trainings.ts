@@ -14,18 +14,17 @@ export type TrainingType = (typeof TRAINING_TYPES)[number];
 interface TrainingMeta {
   label: string;
   emoji: string;
-  /** CSS token koji boji dan u kalendaru i gumb u sheetu. */
-  color: string;
 }
 
+/* Boje namjerno nema: dizajn nosi jedna zelena, a tip se razlikuje emojijem. */
 export const TRAINING_META: Record<TrainingType, TrainingMeta> = {
-  ruke:     { label: "Ruke",      emoji: "💪",  color: "var(--orange)" },
-  noge:     { label: "Noge",      emoji: "🦵",  color: "var(--purple)" },
-  leda:     { label: "Leđa",      emoji: "🪽",  color: "var(--cyan)" },
-  prsa:     { label: "Prsa",      emoji: "🛡️", color: "var(--red)" },
-  ramena:   { label: "Ramena",    emoji: "🪨",  color: "var(--yellow)" },
-  kardio:   { label: "Kardio",    emoji: "🏃",  color: "var(--green)" },
-  fullbody: { label: "Full body", emoji: "🏋️", color: "var(--pink)" },
+  ruke:     { label: "Ruke",      emoji: "💪" },
+  noge:     { label: "Noge",      emoji: "🦵" },
+  leda:     { label: "Leđa",      emoji: "🪽" },
+  prsa:     { label: "Prsa",      emoji: "🛡️" },
+  ramena:   { label: "Ramena",    emoji: "🪨" },
+  kardio:   { label: "Kardio",    emoji: "🏃" },
+  fullbody: { label: "Full body", emoji: "🏋️" },
 };
 
 export function isTrainingType(value: unknown): value is TrainingType {

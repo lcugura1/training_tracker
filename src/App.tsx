@@ -10,11 +10,22 @@ import {
   type Profile,
   type Session,
 } from "./lib/api";
-import { formatLong, currentStreak, countInMonth, isAfterShameHour, todayKey } from "./lib/dates";
+import {
+  MONTH_LABELS,
+  countInMonth,
+  currentStreak,
+  formatLong,
+  formatShort,
+  greeting,
+  isAfterShameHour,
+  longestStreak,
+  timeHHMM,
+  todayKey,
+} from "./lib/dates";
 import { randomHypeMessage, shameMessageFor } from "./lib/messages";
 import { randomHypeMedia, type HypeMedia } from "./lib/hype";
 import { TRAINING_META, type TrainingType } from "./lib/trainings";
-import { Aurora } from "./components/Aurora";
+import { Background } from "./components/Background";
 import { Login } from "./components/Login";
 import { Calendar } from "./components/Calendar";
 import { Stats } from "./components/Stats";
@@ -22,10 +33,18 @@ import { ShameBanner } from "./components/ShameBanner";
 import { TrainingSheet } from "./components/TrainingSheet";
 import { HypeOverlay } from "./components/HypeOverlay";
 
+/** Backend normalizira ime u mala slova; za prikaz vraćamo veliko početno. */
+function displayName(username: string): string {
+  return username.charAt(0).toUpperCase() + username.slice(1);
+}
+
 interface HypeState {
-  message: string;
   emoji: string;
+  typeLabel: string;
+  message: string;
   media: HypeMedia | null;
+  streak: number;
+  isRecord: boolean;
 }
 
 export default function App() {
@@ -39,10 +58,11 @@ export default function App() {
   const [saveError, setSaveError] = useState("");
   const [hype, setHype] = useState<HypeState | null>(null);
 
-  // Sat koji tjera ponovni render kad prijeđe 20:00, bez da korisnik refresha.
+  // Sat koji tjera ponovni render kad prijeđe 20:00 i osvježava prikazano
+  // vrijeme u poruci srama, bez da korisnik refresha.
   const [, setTick] = useState(0);
   useEffect(() => {
-    const timer = setInterval(() => setTick((t) => t + 1), 60_000);
+    const timer = setInterval(() => setTick((t) => t + 1), 30_000);
     return () => clearInterval(timer);
   }, []);
 
@@ -50,6 +70,7 @@ export default function App() {
   useEffect(() => {
     const stored = loadSession();
     if (!stored) return;
+
     authenticate(stored.username, stored.pin)
       .then(({ profile: p }) => {
         setSession(stored);
@@ -62,14 +83,11 @@ export default function App() {
       .finally(() => setRestoring(false));
   }, []);
 
-  const handleLogin = useCallback(
-    (newSession: Session, newProfile: Profile) => {
-      saveSession(newSession);
-      setSession(newSession);
-      setProfile(newProfile);
-    },
-    [],
-  );
+  const handleLogin = useCallback((newSession: Session, newProfile: Profile) => {
+    saveSession(newSession);
+    setSession(newSession);
+    setProfile(newProfile);
+  }, []);
 
   function logout() {
     clearSession();
@@ -78,17 +96,27 @@ export default function App() {
   }
 
   async function saveTraining(type: TrainingType) {
-    if (!session) return;
+    if (!session || !profile) return;
     setSaving(true);
     setSaveError("");
+
+    // Rekord se mjeri prema stanju PRIJE spremanja — inače bi današnji dan
+    // uvijek bio dio najduljeg niza i svaki trening bi bio "novi rekord".
+    const previousBest = longestStreak(profile.entries);
+
     try {
       const updated = await markTraining(session.username, session.pin, todayKey(), type);
+      const streak = currentStreak(updated.entries);
+
       setProfile(updated);
       setSheetOpen(false);
       setHype({
-        message: randomHypeMessage(),
         emoji: TRAINING_META[type].emoji,
+        typeLabel: TRAINING_META[type].label,
+        message: randomHypeMessage(),
         media: randomHypeMedia(),
+        streak,
+        isRecord: streak > previousBest,
       });
     } catch (e) {
       setSaveError(e instanceof ApiError ? e.message : "Nešto je puklo.");
@@ -100,7 +128,7 @@ export default function App() {
   if (restoring) {
     return (
       <>
-        <Aurora />
+        <Background />
         <main className="app" />
       </>
     );
@@ -109,7 +137,7 @@ export default function App() {
   if (!session || !profile) {
     return (
       <>
-        <Aurora />
+        <Background />
         <main className="app">
           <Login onSuccess={handleLogin} />
         </main>
@@ -117,23 +145,26 @@ export default function App() {
     );
   }
 
-  const today = todayKey();
   const now = new Date();
+  const today = todayKey();
   const todayType = profile.entries[today];
   const showShame = !todayType && isAfterShameHour(now);
+  const dateLabel = formatLong(now);
 
   return (
     <>
-      <Aurora />
+      <Background />
 
       <main className="app">
-        <div className="app__inner">
+        <div className={`app__inner app__content ${sheetOpen ? "app__content--dimmed" : ""}`}>
           <header className="header">
-            <div>
-              <h1 className="title-md">{profile.username}</h1>
-              <p className="subtle">{formatLong(now)}</p>
+            <div className="header__text">
+              <h1 className="header__greeting">
+                {greeting(now)}, {displayName(profile.username)}
+              </h1>
+              <p className="header__date">{dateLabel}</p>
             </div>
-            <button type="button" className="btn btn--ghost" onClick={logout}>
+            <button type="button" className="glass--thin pill" onClick={logout}>
               Odjava
             </button>
           </header>
@@ -141,22 +172,22 @@ export default function App() {
           <Stats
             streak={currentStreak(profile.entries)}
             monthCount={countInMonth(profile.entries, now.getFullYear(), now.getMonth())}
+            monthLabel={MONTH_LABELS[now.getMonth()]}
           />
 
-          {showShame && <ShameBanner message={shameMessageFor(today)} />}
+          {showShame && (
+            <ShameBanner time={timeHHMM(now)} message={shameMessageFor(today)} />
+          )}
 
           <Calendar entries={profile.entries} onSelectToday={() => setSheetOpen(true)} />
 
-          {!todayType && !showShame && (
-            <button
-              type="button"
-              className="btn btn--primary"
-              style={{ width: "100%" }}
-              onClick={() => setSheetOpen(true)}
-            >
-              Označi današnji trening
-            </button>
-          )}
+          <button
+            type="button"
+            className={`cta ${todayType ? "" : "cta--pulse"}`}
+            onClick={() => setSheetOpen(true)}
+          >
+            {todayType ? "Promijeni današnji trening" : "Označi današnji trening"}
+          </button>
         </div>
       </main>
 
@@ -164,7 +195,7 @@ export default function App() {
         {sheetOpen && (
           <TrainingSheet
             key="sheet"
-            dateLabel={formatLong(now)}
+            dateLabel={dateLabel}
             initialType={todayType}
             busy={saving}
             error={saveError}
@@ -181,9 +212,13 @@ export default function App() {
         {hype && (
           <HypeOverlay
             key="hype"
-            message={hype.message}
             emoji={hype.emoji}
+            typeLabel={hype.typeLabel}
+            dateLabel={formatShort(now)}
+            message={hype.message}
             media={hype.media}
+            streak={hype.streak}
+            isRecord={hype.isRecord}
             onDismiss={() => setHype(null)}
           />
         )}
