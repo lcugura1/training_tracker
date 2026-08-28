@@ -3,7 +3,7 @@ import type { TrainingType } from "./trainings";
 export interface Profile {
   username: string;
   createdAt: string;
-  entries: Record<string, TrainingType>;
+  entries: Record<string, TrainingType[]>;
 }
 
 export class ApiError extends Error {
@@ -62,14 +62,14 @@ export async function markTraining(
   username: string,
   pin: string,
   date: string,
-  type: TrainingType,
+  types: TrainingType[],
 ): Promise<Profile> {
   const data = await post<{ profile: Profile }>({
     action: "mark",
     username,
     pin,
     date,
-    type,
+    types,
   });
   return data.profile;
 }

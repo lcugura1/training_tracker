@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 import type { HypeMedia } from "../lib/hype";
 
 interface HypeOverlayProps {
-  emoji: string;
+  emojis: string[];
   typeLabel: string;
   dateLabel: string;
   message: string;
@@ -17,7 +17,7 @@ const AUTO_DISMISS_MS = 6000;
 const transition = { duration: 0.24, ease: [0.2, 0.8, 0.2, 1] as const };
 
 export function HypeOverlay({
-  emoji,
+  emojis,
   typeLabel,
   dateLabel,
   message,
@@ -48,7 +48,7 @@ export function HypeOverlay({
         transition={transition}
       >
         <div className="hype__chip">
-          <span className="hype__chip-emoji">{emoji}</span>
+          <span className="hype__chip-emoji">{emojis.join(" ")}</span>
           <span>{typeLabel} · {dateLabel}</span>
         </div>
 
@@ -61,7 +61,7 @@ export function HypeOverlay({
                 <img className="hype__media" src={media.url} alt="" />
               )
             ) : (
-              <span className="hype__slot-emoji">{emoji}</span>
+              <span className="hype__slot-emoji">{emojis.join(" ")}</span>
             )}
           </div>
 

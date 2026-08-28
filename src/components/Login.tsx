@@ -111,10 +111,10 @@ export function Login({ onSuccess }: LoginProps) {
             exit={{ opacity: 0, y: -8 }}
             transition={transition}
           >
+            <span className="auth__step">Korak 1 od 2</span>
+
             <h2 className="sheet__title">Tko si ti?</h2>
-            <p className="sheet__sub">
-              Upiši korisničko ime U FORMATU imeprezime, npr. leoncugura i profil je tvoj.
-            </p>
+            <p className="sheet__sub">Upiši korisničko ime i profil je tvoj.</p>
 
             <input
               className="field"
@@ -129,6 +129,11 @@ export function Login({ onSuccess }: LoginProps) {
               disabled={busy}
               autoFocus
             />
+
+            <p className="auth__hint">
+              U formatu <code className="auth__code">imeprezime</code>, npr.{" "}
+              <code className="auth__code">leoncugura</code>
+            </p>
 
             <p className="error">{error}</p>
 
@@ -149,6 +154,8 @@ export function Login({ onSuccess }: LoginProps) {
             exit={{ opacity: 0, y: -8 }}
             transition={transition}
           >
+            <span className="auth__step">Korak 2 od 2</span>
+
             <h2 className="sheet__title">
               {step === "confirm" ? "Ponovi PIN" : exists ? "Upiši PIN" : "Postavi PIN"}
             </h2>

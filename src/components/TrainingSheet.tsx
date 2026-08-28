@@ -1,13 +1,19 @@
 import { useState } from "react";
 import { motion, type PanInfo } from "motion/react";
-import { TRAINING_META, TRAINING_TYPES, type TrainingType } from "../lib/trainings";
+import {
+  MAX_TYPES_PER_DAY,
+  TRAINING_META,
+  TRAINING_TYPES,
+  toggleType,
+  type TrainingType,
+} from "../lib/trainings";
 
 interface TrainingSheetProps {
   dateLabel: string;
-  initialType?: TrainingType;
+  initialTypes?: TrainingType[];
   busy: boolean;
   error: string;
-  onSave: (type: TrainingType) => void;
+  onSave: (types: TrainingType[]) => void;
   onClose: () => void;
 }
 
@@ -20,13 +26,13 @@ const DISMISS_VELOCITY = 520;
 
 export function TrainingSheet({
   dateLabel,
-  initialType,
+  initialTypes,
   busy,
   error,
   onSave,
   onClose,
 }: TrainingSheetProps) {
-  const [selected, setSelected] = useState<TrainingType | null>(initialType ?? null);
+  const [selected, setSelected] = useState<TrainingType[]>(initialTypes ?? []);
 
   function handleDragEnd(_: unknown, info: PanInfo) {
     // Zatvara se ili po prijeđenom putu ili po brzini otpuštanja — brz flick
@@ -64,18 +70,20 @@ export function TrainingSheet({
         <div className="sheet__handle" />
 
         <h2 className="sheet__title">Što si danas radio?</h2>
-        <p className="sheet__sub">{dateLabel}</p>
+        <p className="sheet__sub">
+          {dateLabel} · odaberi do {MAX_TYPES_PER_DAY}
+        </p>
 
         <div className="types">
           {TRAINING_TYPES.map((type) => {
             const meta = TRAINING_META[type];
-            const isSelected = selected === type;
+            const isSelected = selected.includes(type);
             return (
               <button
                 key={type}
                 type="button"
                 className={`type ${isSelected ? "type--selected" : ""}`}
-                onClick={() => setSelected(type)}
+                onClick={() => setSelected((prev) => toggleType(prev, type))}
                 aria-pressed={isSelected}
               >
                 <span className="type__emoji">{meta.emoji}</span>
@@ -90,8 +98,8 @@ export function TrainingSheet({
         <button
           type="button"
           className="cta"
-          disabled={!selected || busy}
-          onClick={() => selected && onSave(selected)}
+          disabled={selected.length === 0 || busy}
+          onClick={() => selected.length > 0 && onSave(selected)}
         >
           {busy ? "Spremam…" : "Spremi"}
         </button>

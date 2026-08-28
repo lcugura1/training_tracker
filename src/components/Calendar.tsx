@@ -3,7 +3,7 @@ import { DAY_LABELS, MONTH_LABELS, monthGrid, toKey, todayKey } from "../lib/dat
 import { TRAINING_META, type TrainingType } from "../lib/trainings";
 
 interface CalendarProps {
-  entries: Record<string, TrainingType>;
+  entries: Record<string, TrainingType[]>;
   onSelectToday: () => void;
 }
 
@@ -63,27 +63,38 @@ export function Calendar({ entries, onSelectToday }: CalendarProps) {
           if (!date) return <span key={`empty-${i}`} className="cal__cell" />;
 
           const key = toKey(date);
-          const type = entries[key];
-          const meta = type ? TRAINING_META[type] : null;
+          const metas = (entries[key] ?? []).map((t) => TRAINING_META[t]);
+          const done = metas.length > 0;
           const isToday = key === today;
           const isFuture = key > today;
 
           const classes = [
             "cal__cell",
-            meta ? "cal__cell--done" : "",
+            done ? "cal__cell--done" : "",
             isToday ? "cal__cell--today" : "",
-            !meta && !isToday && !isFuture ? "cal__cell--past" : "",
+            !done && !isToday && !isFuture ? "cal__cell--past" : "",
           ]
             .filter(Boolean)
             .join(" ");
 
-          const label = meta
-            ? `${date.getDate()}. ${MONTH_LABELS[view.month]} — ${meta.label}`
+          const label = done
+            ? `${date.getDate()}. ${MONTH_LABELS[view.month]} — ${metas
+                .map((m) => m.label)
+                .join(" + ")}`
             : `${date.getDate()}. ${MONTH_LABELS[view.month]}${
                 isToday ? " — danas, označi trening" : ""
               }`;
 
-          const content = meta ? meta.emoji : date.getDate();
+          // Dva emojija stanu u krug samo ako se smanje i stisnu jedan uz drugi.
+          const content = done ? (
+            <span className={`cal__emojis ${metas.length > 1 ? "cal__emojis--duo" : ""}`}>
+              {metas.map((m, n) => (
+                <span key={n}>{m.emoji}</span>
+              ))}
+            </span>
+          ) : (
+            date.getDate()
+          );
 
           // Klikabilan je samo današnji dan; ostalo je statični prikaz.
           return isToday ? (

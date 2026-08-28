@@ -13,6 +13,7 @@ const TRAINING_TYPES = [
   "leda",
   "prsa",
   "ramena",
+  "core",
   "kardio",
   "fullbody",
 ] as const;
@@ -24,7 +25,7 @@ interface Profile {
   pinHash: string;
   pinSalt: string;
   createdAt: string;
-  entries: Record<string, TrainingType>;
+  entries: Record<string, TrainingType[] | TrainingType>;
   failedAttempts?: number;
   lockedUntil?: number;
 }
@@ -85,9 +86,27 @@ function safeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+/**
+ * Profili spremljeni prije uvođenja višestrukog odabira imaju string umjesto
+ * liste. Normaliziramo pri svakom čitanju da klijent nikad ne vidi oba oblika.
+ */
+function normalizeEntries(
+  entries: Record<string, TrainingType[] | TrainingType>,
+): Record<string, TrainingType[]> {
+  const out: Record<string, TrainingType[]> = {};
+  for (const [date, value] of Object.entries(entries)) {
+    out[date] = Array.isArray(value) ? value : [value];
+  }
+  return out;
+}
+
 /** Ono što smije van — nikad hash ni salt. */
 function publicProfile(p: Profile) {
-  return { username: p.username, createdAt: p.createdAt, entries: p.entries };
+  return {
+    username: p.username,
+    createdAt: p.createdAt,
+    entries: normalizeEntries(p.entries),
+  };
 }
 
 export default async (req: Request, _context: Context) => {
@@ -177,7 +196,14 @@ export default async (req: Request, _context: Context) => {
   /* --- Označavanje treninga --- */
   if (body.action === "mark") {
     if (!isValidDate(body.date)) return fail("date", "Neispravan datum.");
-    if (!TRAINING_TYPES.includes(body.type as TrainingType)) {
+    const types = body.types;
+    if (!Array.isArray(types) || types.length < 1 || types.length > 2) {
+      return fail("type", "Odaberi jedan ili dva tipa treninga.");
+    }
+    if (new Set(types).size !== types.length) {
+      return fail("type", "Isti tip ne može biti odabran dvaput.");
+    }
+    if (!types.every((t) => TRAINING_TYPES.includes(t as TrainingType))) {
       return fail("type", "Nepoznat tip treninga.");
     }
     // Samo današnji dan — ne dopuštamo naknadno popravljanje povijesti.
@@ -185,7 +211,7 @@ export default async (req: Request, _context: Context) => {
     if (body.date !== today) {
       return fail("date", "Možeš označiti samo današnji dan.", 403);
     }
-    profile.entries = { ...profile.entries, [body.date]: body.type as TrainingType };
+    profile.entries = { ...profile.entries, [body.date]: types as TrainingType[] };
     await blobs.setJSON(username, profile);
     return json({ ok: true, profile: publicProfile(profile) });
   }

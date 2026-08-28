@@ -24,7 +24,7 @@ import {
 } from "./lib/dates";
 import { randomHypeMessage, shameMessageFor } from "./lib/messages";
 import { randomHypeMedia, type HypeMedia } from "./lib/hype";
-import { TRAINING_META, type TrainingType } from "./lib/trainings";
+import { TRAINING_META, typesLabel, type TrainingType } from "./lib/trainings";
 import { Background } from "./components/Background";
 import { Login } from "./components/Login";
 import { Calendar } from "./components/Calendar";
@@ -39,7 +39,7 @@ function displayName(username: string): string {
 }
 
 interface HypeState {
-  emoji: string;
+  emojis: string[];
   typeLabel: string;
   message: string;
   media: HypeMedia | null;
@@ -95,7 +95,7 @@ export default function App() {
     setProfile(null);
   }
 
-  async function saveTraining(type: TrainingType) {
+  async function saveTraining(types: TrainingType[]) {
     if (!session || !profile) return;
     setSaving(true);
     setSaveError("");
@@ -105,14 +105,14 @@ export default function App() {
     const previousBest = longestStreak(profile.entries);
 
     try {
-      const updated = await markTraining(session.username, session.pin, todayKey(), type);
+      const updated = await markTraining(session.username, session.pin, todayKey(), types);
       const streak = currentStreak(updated.entries);
 
       setProfile(updated);
       setSheetOpen(false);
       setHype({
-        emoji: TRAINING_META[type].emoji,
-        typeLabel: TRAINING_META[type].label,
+        emojis: types.map((t) => TRAINING_META[t].emoji),
+        typeLabel: typesLabel(types),
         message: randomHypeMessage(),
         media: randomHypeMedia(),
         streak,
@@ -147,8 +147,8 @@ export default function App() {
 
   const now = new Date();
   const today = todayKey();
-  const todayType = profile.entries[today];
-  const showShame = !todayType && isAfterShameHour(now);
+  const todayTypes = profile.entries[today];
+  const showShame = !todayTypes && isAfterShameHour(now);
   const dateLabel = formatLong(now);
 
   return (
@@ -183,10 +183,10 @@ export default function App() {
 
           <button
             type="button"
-            className={`cta ${todayType ? "" : "cta--pulse"}`}
+            className={`cta ${todayTypes ? "" : "cta--pulse"}`}
             onClick={() => setSheetOpen(true)}
           >
-            {todayType ? "Promijeni današnji trening" : "Označi današnji trening"}
+            {todayTypes ? "Promijeni današnji trening" : "Označi današnji trening"}
           </button>
         </div>
       </main>
@@ -196,7 +196,7 @@ export default function App() {
           <TrainingSheet
             key="sheet"
             dateLabel={dateLabel}
-            initialType={todayType}
+            initialTypes={todayTypes}
             busy={saving}
             error={saveError}
             onSave={saveTraining}
@@ -212,7 +212,7 @@ export default function App() {
         {hype && (
           <HypeOverlay
             key="hype"
-            emoji={hype.emoji}
+            emojis={hype.emojis}
             typeLabel={hype.typeLabel}
             dateLabel={formatShort(now)}
             message={hype.message}

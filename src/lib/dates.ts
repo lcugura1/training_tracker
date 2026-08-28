@@ -45,7 +45,7 @@ export function monthGrid(year: number, month: number): (Date | null)[] {
  * Ako danas još nije označen, niz se i dalje broji od jučer — dan nije gotov
  * dok ne prođe ponoć, pa ga ne kažnjavamo prerano.
  */
-export function currentStreak(entries: Record<string, string>): number {
+export function currentStreak(entries: Record<string, unknown>): number {
   const cursor = new Date();
   if (!entries[toKey(cursor)]) cursor.setDate(cursor.getDate() - 1);
 
@@ -58,7 +58,7 @@ export function currentStreak(entries: Record<string, string>): number {
 }
 
 export function countInMonth(
-  entries: Record<string, string>,
+  entries: Record<string, unknown>,
   year: number,
   month: number,
 ): number {
@@ -98,7 +98,7 @@ export function timeHHMM(now = new Date()): string {
  * Dan se pomiče preko setDate, ne zbrajanjem milisekundi: prelazak na ljetno
  * računanje vremena čini dan dugim 23 ili 25 sati, pa bi aritmetika pukla.
  */
-export function longestStreak(entries: Record<string, string>): number {
+export function longestStreak(entries: Record<string, unknown>): number {
   const keys = Object.keys(entries).sort();
   let best = 0;
   let run = 0;
