@@ -65,8 +65,7 @@ export function tagBreakdown(entries: Entries): TagShare[] {
     .sort((a, b) => b.count - a.count);
 }
 
-/** "1 trening", "2 treninga", "21 trening", "11 treninga". */
-export function trainingsLabel(n: number): string {
-  const one = n % 10 === 1 && n % 100 !== 11;
-  return `${n} ${one ? "trening" : "treninga"}`;
+/** Samo riječ: "trening" za 1, 21, 31 … (ali ne 11), inače "treninga". */
+export function trainingsWord(n: number): string {
+  return n % 10 === 1 && n % 100 !== 11 ? "trening" : "treninga";
 }

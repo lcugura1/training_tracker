@@ -601,13 +601,13 @@ button { font: inherit; color: inherit; }
 
 .donut__name { font-size: 15px; font-weight: 600; }
 
-.donut__percent {
+.donut__value {
   font-size: 40px;
   font-weight: 800;
   color: var(--color-text-primary);
 }
 
-.donut__count {
+.donut__unit {
   font-size: 13px;
   color: var(--color-text-secondary);
 }
@@ -661,7 +661,7 @@ button { font: inherit; color: inherit; }
 
 .chip--selected .chip__name { font-weight: 700; }
 
-.chip__share {
+.chip__count {
   font-size: 13px;
   color: var(--color-text-secondary);
 }

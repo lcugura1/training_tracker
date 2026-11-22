@@ -12,7 +12,7 @@ na jeziku.
   unatrag** (dodirni dan); starije se ne prepravlja. Granica se računa isto na
   klijentu (`src/lib/dates.ts`) i na serveru (`netlify/functions/profile.mts`).
 - **Tipovi treninga** — Ruke 💪, Noge 🦵, Leđa 🪽, Prsa 🛡️, Ramena 🪨, Core 🧱,
-  Kardio 🏃, Boks 🥊, Full body 🏋️. Do dva po danu. Označeni dan u kalendaru pokazuje emoji
+  Kardio 🏃, Trčanje 👟, Plivanje 🏊, Boks 🥊, Full body 🏋️. Do dva po danu. Označeni dan u kalendaru pokazuje emoji
   svog tipa (limeta pločica), a graf raspodjele koristi boje.
 - **Mjesečni cilj** — tap na karticu "Ovaj mjesec" otvara modal za cilj
   (1–31 dolazaka) u istom bottom sheetu kao i odabir treninga. Sprema se na profil, a prsten pokazuje `dolasci/cilj`.

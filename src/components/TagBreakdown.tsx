@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { tagBreakdown, trainingsLabel } from "../lib/stats";
+import { tagBreakdown, trainingsWord } from "../lib/stats";
 import { TRAINING_META, type TrainingType } from "../lib/trainings";
 
 interface TagBreakdownProps {
@@ -106,13 +106,13 @@ export function TagBreakdown({ entries }: TagBreakdownProps) {
               >
                 {TRAINING_META[selected.type].label}
               </div>
-              <div className="donut__percent tnum">{Math.round(selected.share * 100)}%</div>
-              <div className="donut__count">{trainingsLabel(selected.count)}</div>
+              <div className="donut__value tnum">{selected.count}</div>
+              <div className="donut__unit">{trainingsWord(selected.count)}</div>
             </>
           ) : (
             <>
-              <div className="donut__percent tnum">0</div>
-              <div className="donut__count">Nema treninga</div>
+              <div className="donut__value tnum">0</div>
+              <div className="donut__unit">Nema treninga</div>
             </>
           )}
         </div>
@@ -134,7 +134,7 @@ export function TagBreakdown({ entries }: TagBreakdownProps) {
               >
                 <span className="chip__dot" />
                 <span className="chip__name">{meta.label}</span>
-                <span className="chip__share tnum">{Math.round(s.share * 100)}%</span>
+                <span className="chip__count tnum">{s.count}</span>
               </button>
             );
           })}

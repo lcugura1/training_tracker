@@ -7,6 +7,8 @@ export const TRAINING_TYPES = [
   "ramena",
   "core",
   "kardio",
+  "trcanje",
+  "plivanje",
   "boks",
   "fullbody",
 ] as const;
@@ -25,9 +27,10 @@ interface TrainingMeta {
 
 /*
  * Boje prate TAG_COLORS iz dizajna (design_handoff_evidencija/SPEC.md). Dizajn
- * poznaje šest oznaka, a mi imamo osam tipova — Core, Full body i Boks dobili su
- * nove boje iz iste obitelji (cijan, žuta, srebrna). Kalendar ne koristi boje: tamo tip
- * dana nosi emoji.
+ * poznaje šest oznaka, a mi imamo jedanaest tipova — Core, Full body, Boks,
+ * Trčanje i Plivanje dobili su nove boje iz iste obitelji (cijan, žuta,
+ * srebrna, koral, indigo). Kalendar ne koristi boje: tamo tip dana nosi emoji.
+ * Trčanje ima 👟 jer 🏃 već nosi Kardio, a dani se razlikuju samo po emojiju.
  */
 export const TRAINING_META: Record<TrainingType, TrainingMeta> = {
   ruke:     { label: "Ruke",      emoji: "💪", color: "#FF6B8A" },
@@ -37,6 +40,8 @@ export const TRAINING_META: Record<TrainingType, TrainingMeta> = {
   ramena:   { label: "Ramena",    emoji: "🪨", color: "#B57BFF" },
   core:     { label: "Core",      emoji: "🧱", color: "#4DD4E6" },
   kardio:   { label: "Kardio",    emoji: "🏃", color: "#3DDC97" },
+  trcanje:  { label: "Trčanje",   emoji: "👟", color: "#FF5C4D" },
+  plivanje: { label: "Plivanje",  emoji: "🏊", color: "#7C8CFF" },
   boks:     { label: "Boks",      emoji: "🥊", color: "#C7C7CC" },
   fullbody: { label: "Full body", emoji: "🏋️", color: "#FFD84D" },
 };

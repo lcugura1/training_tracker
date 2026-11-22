@@ -15,6 +15,8 @@ const TRAINING_TYPES = [
   "ramena",
   "core",
   "kardio",
+  "trcanje",
+  "plivanje",
   "boks",
   "fullbody",
 ] as const;
