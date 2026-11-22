@@ -1,47 +1,52 @@
 /* ===========================================================================
    Trening Tracker — dizajn sustav
-   Vrijednosti dolaze iz design_handoff_trening_tracker/README.md.
-   Jedna zelena nosi sve; amber postoji samo za poruku srama.
+   Izvor: design_handoff_evidencija/SPEC.md (GibiGib design system).
+   Crna podloga, jedna limeta kao akcent, sav ostali izgled iz tokena niže.
+   Jedina iznimka su boje oznaka treninga (TRAINING_META.color) — to su podaci,
+   ne UI tokeni, pa žive u kodu uz tipove, a ne ovdje.
    =========================================================================== */
 
 :root {
-  --bg: #04060A;
-  --accent: #22C55E;
-  --accent-pressed: #16A34A;
-  --on-accent: #062911;
+  --color-background: #000000;
+  --color-surface: #0E0E10;
+  --color-surface-border: #1F1F22;
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #8E8E93;
+  --color-text-on-light: #000000;
+  --color-card-gradient-from: #1A1B1E;
+  --color-card-gradient-to: #0C0C0E;
+  --color-card-border: #26272B;
+  --color-card-light-gradient-from: #FFFFFF;
+  --color-card-light-gradient-to: #DEDEE3;
+  --color-accent: #C5F23D;
+  --color-danger: #FF3B30;
+  --color-border: #3A3A3A;
+  --color-border-focused: #FFFFFF;
 
-  --text: #FFFFFF;
-  --text-muted: #9CA3AF;
-  --text-subtle: #6B7280;
-  --text-weekday: #4B5563;
-  --text-future: #374151;
+  /* Bez web fontova — sistemski stack, kako traži dizajn. */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, system-ui, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, Menlo, monospace;
 
-  --amber: #F5B400;
-  --amber-text: #F5D680;
-  --amber-fill: rgba(245, 180, 0, 0.10);
-
-  --hairline: rgba(255, 255, 255, 0.06);
-  --hairline-strong: rgba(255, 255, 255, 0.12);
-
-  /* Bez opruga — dizajn traži jedno easing i kratka trajanja. */
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --dur-press: 100ms;
-  --dur-base: 200ms;
-
-  --app-max: 460px;
+  --app-max: 480px;
 
   color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
 
-html, body, #root { height: 100%; }
+html {
+  /* Skriveni scrollbar, kao u dizajnu. */
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar { display: none; }
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  min-height: 100dvh;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font);
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-y: none;
@@ -52,115 +57,43 @@ button { font: inherit; color: inherit; }
 /* Brojevi se ne smiju micati dok se mijenjaju. */
 .tnum { font-variant-numeric: tabular-nums; }
 
+:where(button, input, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 /* ---------------------------------------------------------------------------
-   POZADINA — tri mekana kruga svjetla, vignette i zrno.
-   Animira se isključivo transform; filter i position nikad.
+   POVRŠINE — tri vrste kartica iz speca
 --------------------------------------------------------------------------- */
 
-.bg {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-  background: var(--bg);
-}
-
-.bg__orb {
-  position: absolute;
-  border-radius: 50%;
-  will-change: transform;
-}
-
-.bg__orb--1 {
-  top: -18vmax; left: -10vmax;
-  width: 56vmax; height: 56vmax;
-  filter: blur(90px);
-  opacity: 0.5;
-  background: radial-gradient(circle, #127A47 0%, transparent 65%);
-  animation: drift1 28s ease-in-out infinite alternate;
-}
-
-.bg__orb--2 {
-  top: 20vmax; right: -22vmax;
-  width: 52vmax; height: 52vmax;
-  filter: blur(100px);
-  opacity: 0.38;
-  background: radial-gradient(circle, #0B5A6B 0%, transparent 65%);
-  animation: drift2 34s ease-in-out infinite alternate;
-}
-
-.bg__orb--3 {
-  bottom: -24vmax; left: 22vmax;
-  width: 48vmax; height: 48vmax;
-  filter: blur(90px);
-  opacity: 0.32;
-  background: radial-gradient(circle, #15A05A 0%, transparent 65%);
-  animation: drift3 40s ease-in-out infinite alternate;
-}
-
-.bg__vignette {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    120% 60% at 50% 0%,
-    rgba(34, 197, 94, 0.12) 0%,
-    rgba(34, 197, 94, 0.04) 32%,
-    transparent 62%
+/* Tamna kartica (zadana). */
+.card {
+  border-radius: 24px;
+  border: 1px solid var(--color-card-border);
+  background: linear-gradient(
+    135deg,
+    var(--color-card-gradient-from),
+    var(--color-card-gradient-to)
   );
 }
 
-/* Zrno ubija banding na velikim blur plohama. */
-.bg__grain {
-  position: absolute;
-  inset: 0;
-  opacity: 0.05;
-  filter: url(#grain);
-  mix-blend-mode: overlay;
+.card--light {
+  border: 0;
+  background: linear-gradient(
+    135deg,
+    var(--color-card-light-gradient-from),
+    var(--color-card-light-gradient-to)
+  );
+  color: var(--color-text-on-light);
 }
 
-@keyframes drift1 {
-  from { transform: translate3d(0, 0, 0) scale(1); }
-  to   { transform: translate3d(90px, 70px, 0) scale(1.25); }
-}
-@keyframes drift2 {
-  from { transform: translate3d(0, 0, 0) scale(1.15); }
-  to   { transform: translate3d(-110px, 90px, 0) scale(0.9); }
-}
-@keyframes drift3 {
-  from { transform: translate3d(0, 0, 0) scale(0.95); }
-  to   { transform: translate3d(70px, -80px, 0) scale(1.2); }
-}
-@keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 0.9; }
-  50%      { transform: scale(1.04); opacity: 1; }
-}
-@keyframes sheen {
-  from { transform: translateX(-120%); }
-  to   { transform: translateX(220%); }
+.card--light :where(button):focus-visible {
+  outline-color: var(--color-text-on-light);
 }
 
-/* ---------------------------------------------------------------------------
-   STAKLO — nikad ne slaži dva prozirna sloja jedan na drugi.
---------------------------------------------------------------------------- */
-
-.glass {
-  background: rgba(255, 255, 255, 0.055);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-          backdrop-filter: blur(28px) saturate(180%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.20),
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.06),
-    0 18px 40px rgba(0, 0, 0, 0.5);
-}
-
-.glass--thin {
-  background: rgba(255, 255, 255, 0.05);
-  -webkit-backdrop-filter: blur(16px) saturate(170%);
-          backdrop-filter: blur(16px) saturate(170%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.07);
+.card--surface {
+  border: 1px solid var(--color-surface-border);
+  background: var(--color-surface);
 }
 
 /* ---------------------------------------------------------------------------
@@ -168,62 +101,77 @@ button { font: inherit; color: inherit; }
 --------------------------------------------------------------------------- */
 
 .app {
-  position: relative;
-  z-index: 1;
-  min-height: 100%;
+  min-height: 100dvh;
   display: flex;
   justify-content: center;
   padding:
-    max(56px, calc(env(safe-area-inset-top) + 20px))
-    20px
-    max(20px, env(safe-area-inset-bottom));
+    max(24px, calc(env(safe-area-inset-top) + 20px))
+    16px
+    max(24px, env(safe-area-inset-bottom));
 }
 
 .app__inner {
   width: 100%;
   max-width: var(--app-max);
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
 }
 
-/* Dok je sheet otvoren, sadržaj iza se povlači u drugi plan. */
-.app__content {
-  transition: filter var(--dur-base) var(--ease),
-              opacity var(--dur-base) var(--ease);
+.status {
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-text-secondary);
 }
-.app__content--dimmed {
-  filter: blur(7px);
-  opacity: 0.45;
-  pointer-events: none;
-}
+
+.status--error { color: var(--color-danger); }
 
 /* ---------------------------------------------------------------------------
-   ZAGLAVLJE
+   NASLOV — lijevo poravnat, Odjava desno u istom redu
 --------------------------------------------------------------------------- */
 
-.header {
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.head__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
 }
 
-.header__text { display: flex; flex-direction: column; gap: 4px; }
-
-.header__greeting {
+.head__title {
   margin: 0;
-  font-size: 22px;
+  font-size: 30px;
   font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
+  letter-spacing: 0.3px;
+  color: var(--color-text-primary);
 }
 
-.header__date {
+.head__logout {
+  appearance: none;
+  /* Negativna margina zadržava visinu reda, a dodir ostaje velik. */
+  margin: -12px 0;
+  padding: 12px 0 12px 12px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.head__logout:active { opacity: 0.9; }
+
+.head__sub {
   margin: 0;
-  font-size: 13px;
-  font-weight: 400;
-  color: var(--text-muted);
+  font-size: 14px;
+  color: var(--color-text-secondary);
 }
 
 /* ---------------------------------------------------------------------------
@@ -235,183 +183,221 @@ button { font: inherit; color: inherit; }
   border: 0;
   cursor: pointer;
   width: 100%;
-  height: 56px;
+  height: 60px;
   border-radius: 999px;
-  background: var(--accent);
-  color: var(--on-accent);
-  font-size: 16px;
-  font-weight: 600;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
-    0 8px 24px rgba(34, 197, 94, 0.30);
-  transition: transform var(--dur-press) var(--ease),
-              background-color var(--dur-press) var(--ease);
+  background: var(--color-accent);
+  color: var(--color-text-on-light);
+  font-size: 18px;
+  font-weight: 700;
   -webkit-tap-highlight-color: transparent;
 }
 
-.cta:active:not(:disabled) {
-  transform: scale(0.97);
-  background: var(--accent-pressed);
-}
-
+.cta:active:not(:disabled) { transform: scale(0.98); }
 .cta:disabled { opacity: 0.4; cursor: default; }
 
-/* Pulsira samo dok dan nije označen — poziv na akciju, ne ukras. */
-.cta--pulse { animation: pulse 2.6s ease-in-out infinite; }
-.cta--pulse:active { animation: none; }
-
-.pill {
-  appearance: none;
-  border: 0;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 36px;
-  padding: 0 14px;
-  border-radius: 999px;
-  font-size: 13px;
+/* Dan je već označen: gumb ostaje, ali limeta se čuva za dan koji čeka akciju. */
+.cta--quiet {
+  border: 1px solid var(--color-surface-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
   font-weight: 600;
-  color: var(--text-muted);
-  transition: transform var(--dur-press) var(--ease);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.pill:active { transform: scale(0.97); }
-
-.icon-btn {
-  appearance: none;
-  border: 0;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-muted);
-  font-size: 15px;
-  transition: transform var(--dur-press) var(--ease);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.icon-btn:active:not(:disabled) { transform: scale(0.97); }
-.icon-btn:disabled { opacity: 0.35; cursor: default; }
-
-:where(button, input, [tabindex]):focus-visible {
-  outline: none;
-  box-shadow:
-    inset 0 0 0 1.5px var(--accent),
-    0 0 0 6px rgba(34, 197, 94, 0.18);
 }
 
 /* ---------------------------------------------------------------------------
-   STATISTIKA — jedna kartica s razdjelnikom, ne dvije
+   POČETNI ZASLON — red statistike
 --------------------------------------------------------------------------- */
 
 .stats {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr 1px 1fr;
-  align-items: center;
-  padding: 22px 8px;
-  border-radius: 34px;
-  overflow: hidden;
+  display: flex;
+  gap: 12px;
 }
 
-/* Dijagonalni odsjaj koji polako prelazi preko kartice. */
-.stats__sheen {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 40%;
-  height: 100%;
-  background: linear-gradient(
-    100deg,
-    transparent,
-    rgba(255, 255, 255, 0.10),
-    transparent
-  );
-  animation: sheen 7s ease-in-out infinite;
-  pointer-events: none;
+.stats__card {
+  flex: 1;
+  min-width: 0;
+  padding: 18px;
 }
 
-.stat {
+/* Kartica je gumb koji otvara mjesečni cilj, pa treba reset preglednika. */
+.stats__card--ring {
+  appearance: none;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 12px;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.stat__value {
-  font-size: 38px;
+.stats__card--ring:active { opacity: 0.9; }
+
+.stats__card--total {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.stats__label {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+}
+
+/* Prsten kreće s vrha: SVG se zakrene, tekst u sredini ostaje uspravan. */
+.ring {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring__svg {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+}
+
+.ring__track,
+.ring__bar {
+  fill: none;
+  stroke-width: 10;
+}
+
+.ring__track { stroke: var(--color-card-border); }
+
+.ring__bar {
+  stroke: var(--color-accent);
+  stroke-linecap: round;
+  /* Nakon spremanja cilja prsten klizi na novu vrijednost. */
+  transition: stroke-dashoffset 400ms ease-out;
+}
+
+.ring__value {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+}
+
+.ring__done {
+  font-size: 42px;
   font-weight: 800;
-  line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: -1px;
+  color: var(--color-text-primary);
 }
 
-.stat__value--accent { color: var(--accent); }
-
-.stat__label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-subtle);
+.ring__limit {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--color-text-secondary);
 }
 
-.stats__divider {
-  width: 1px;
-  height: 44px;
-  background: rgba(255, 255, 255, 0.10);
+.stats__total {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.total__value {
+  font-size: 52px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  line-height: 1.15;
+  color: var(--color-text-primary);
+}
+
+/* Sparkline curi do rubova kartice, zato negativne margine jednake paddingu. */
+.spark {
+  flex: 1;
+  min-height: 52px;
+  display: flex;
+  align-items: flex-end;
+  margin: 0 -18px -18px;
+}
+
+.spark__plot {
+  position: relative;
+  width: 100%;
+  height: 52px;
+}
+
+.spark__svg {
+  display: block;
+  width: 100%;
+  height: 52px;
+}
+
+.spark__line {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  /* SVG se širi s karticom; bez ovoga bi i linija postala deblja od 2px. */
+  vector-effect: non-scaling-stroke;
+}
+
+.spark__stop--top { stop-color: var(--color-accent); stop-opacity: 0.28; }
+.spark__stop--bottom { stop-color: var(--color-accent); stop-opacity: 0; }
+
+.spark__dot {
+  position: absolute;
+  right: 1px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
 }
 
 /* ---------------------------------------------------------------------------
-   PORUKA SRAMA — jedini amber u aplikaciji
+   PORUKA SRAMA — velika rečenica izravno na podlozi, bez kartice
 --------------------------------------------------------------------------- */
 
 .shame {
+  padding: 8px 4px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.shame__time {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: 22px;
-  background: var(--amber-fill);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-          backdrop-filter: blur(20px) saturate(180%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    inset 0 0 0 0.5px rgba(245, 180, 0, 0.30);
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-danger);
 }
 
 .shame__dot {
-  flex: 0 0 8px;
   width: 8px;
   height: 8px;
-  border-radius: 50%;
-  background: var(--amber);
-  box-shadow: 0 0 12px rgba(245, 180, 0, 0.8);
+  border-radius: 4px;
+  background: var(--color-danger);
 }
 
 .shame__text {
   margin: 0;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.45;
-  color: var(--amber-text);
+  font-size: 32px;
+  line-height: 1.12;
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  color: var(--color-text-primary);
+  text-wrap: pretty;
 }
 
 /* ---------------------------------------------------------------------------
-   KALENDAR — dani su krugovi
+   KALENDAR — svijetla kartica
 --------------------------------------------------------------------------- */
 
 .cal {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 20px 16px 22px;
-  border-radius: 32px;
+  gap: 16px;
+  padding: 20px;
 }
 
 .cal__head {
@@ -421,100 +407,274 @@ button { font: inherit; color: inherit; }
 }
 
 .cal__month {
+  flex: 1;
   margin: 0;
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.cal__year { color: var(--text-subtle); font-weight: 500; }
-
-.cal__weekdays,
-.cal__grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-}
-
-.cal__weekday {
   text-align: center;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  color: var(--text-weekday);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
-.cal__cell {
+.cal__nav {
   appearance: none;
-  border: 0;
-  padding: 0;
-  aspect-ratio: 1;
+  position: relative;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: transparent;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-future);
-  font-variant-numeric: tabular-nums;
-  transition: transform var(--dur-press) var(--ease);
+  padding: 4px;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Prošli dan bez treninga: vidljiv, ali zaključan. */
-.cal__cell--past {
-  background: rgba(255, 255, 255, 0.03);
-  font-size: 14px;
-  color: var(--text-subtle);
+/* Nevidljiva površina dodira, do 44×44. */
+.cal__nav::after {
+  content: "";
+  position: absolute;
+  inset: -9px;
 }
 
-/* Danas prije označavanja: aktivan, ali još bez zelene. */
-.cal__cell--today {
-  cursor: pointer;
-  font-size: 14px;
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.03);
+.cal__nav:active:not(:disabled) { opacity: 0.9; }
+.cal__nav:disabled { opacity: 0.3; cursor: default; }
+
+.cal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.cal__cell--today:active { transform: scale(0.97); }
-
-.cal__cell--done {
-  background: rgba(34, 197, 94, 0.16);
-  box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.45);
-  font-size: 16px;
+.cal__weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
 }
 
-.cal__emojis {
+.cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  row-gap: 8px;
+  justify-items: center;
+  font-size: 15px;
+}
+
+.cal__empty { height: 38px; }
+
+.day {
+  appearance: none;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Dan s treningom: limeta kao oznaka da je označen, a emoji kaže što se radilo. */
+.day--done {
+  background: var(--color-accent);
+  color: var(--color-text-on-light);
+  font-size: 18px;
+}
+
+.day__emojis {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
 }
 
-/* Dva emojija stanu u krug samo smanjena i stisnuta jedan uz drugi. */
-.cal__emojis--duo {
-  font-size: 11px;
+/* Dva emojija stanu u pločicu samo smanjena i stisnuta jedan uz drugi. */
+.day__emojis--duo {
+  font-size: 14px;
   letter-spacing: -1px;
 }
 
+.day--today {
+  font-weight: 700;
+  border: 2px solid var(--color-text-on-light);
+}
+
+.day--locked { opacity: 0.35; }
+
+.day--editable { cursor: pointer; }
+.day--editable:active { opacity: 0.9; }
+
+/* Dani koji se mogu označiti nisu ničim obilježeni, pa na mišu barem svijetle. */
+@media (hover: hover) {
+  .day--editable:not(.day--done):hover {
+    background: color-mix(in srgb, var(--color-text-on-light) 8%, transparent);
+  }
+}
+
+.legend {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 13px;
+}
+
+.legend__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend__emoji {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.legend__swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+
+.legend__swatch--today { border: 2px solid var(--color-text-on-light); }
+
 .cal__hint {
   margin: 0;
-  text-align: center;
   font-size: 12px;
-  color: var(--text-subtle);
+  opacity: 0.55;
+}
+
+/* ---------------------------------------------------------------------------
+   NAJČEŠĆI TRENINZI — donut + čipovi
+--------------------------------------------------------------------------- */
+
+.breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px;
+}
+
+.breakdown__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.donut {
+  position: relative;
+  align-self: center;
+  width: 240px;
+  height: 240px;
+}
+
+.donut__svg {
+  display: block;
+  overflow: visible;
+}
+
+.donut__segment { cursor: pointer; }
+.donut__empty { fill: var(--color-surface-border); }
+
+.donut__center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.donut__name { font-size: 15px; font-weight: 600; }
+
+.donut__percent {
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.donut__count {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  appearance: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-surface-border);
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Čip je ~35px visok; ovo širi površinu dodira na 44px. */
+.chip::after {
+  content: "";
+  position: absolute;
+  inset: -5px 0;
+}
+
+.chip:active { opacity: 0.9; }
+
+.chip--selected {
+  border-color: var(--tag);
+  background: color-mix(in srgb, var(--tag) 12%, transparent);
+}
+
+.chip__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 5px;
+  background: var(--tag);
+}
+
+.chip__name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.chip--selected .chip__name { font-weight: 700; }
+
+.chip__share {
+  font-size: 13px;
+  color: var(--color-text-secondary);
 }
 
 /* ---------------------------------------------------------------------------
    BOTTOM SHEET
 --------------------------------------------------------------------------- */
 
-/* Scrim je namjerno flat — blur radi sadržaj ispod (.app__content--dimmed). */
 .scrim {
   position: fixed;
   inset: 0;
   z-index: 20;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.6);
 }
 
 .sheet {
@@ -530,23 +690,11 @@ button { font: inherit; color: inherit; }
   flex-direction: column;
   gap: 18px;
   padding: 14px 20px max(28px, env(safe-area-inset-bottom));
-  border-radius: 34px 34px 0 0;
-  background: rgba(255, 255, 255, 0.07);
-  -webkit-backdrop-filter: blur(34px) saturate(185%);
-          backdrop-filter: blur(34px) saturate(185%) url(#liquid-refraction);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.24),
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.07),
-    0 -20px 60px rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--color-surface-border);
+  border-bottom: 0;
+  border-radius: 24px 24px 0 0;
+  background: var(--color-surface);
   touch-action: none;
-}
-
-/* Refrakcija je jedini hero moment; gdje je nema, ostaje čisto staklo. */
-@supports not (backdrop-filter: url(#liquid-refraction)) {
-  .sheet {
-    -webkit-backdrop-filter: blur(34px) saturate(185%);
-            backdrop-filter: blur(34px) saturate(185%);
-  }
 }
 
 .sheet__handle {
@@ -554,7 +702,7 @@ button { font: inherit; color: inherit; }
   height: 5px;
   margin: 0 auto;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.22);
+  background: var(--color-card-border);
 }
 
 .sheet__title {
@@ -562,14 +710,13 @@ button { font: inherit; color: inherit; }
   text-align: center;
   font-size: 24px;
   font-weight: 800;
-  letter-spacing: -0.02em;
 }
 
 .sheet__sub {
   margin: -12px 0 0;
   text-align: center;
   font-size: 13px;
-  color: var(--text-muted);
+  color: var(--color-text-secondary);
 }
 
 .types {
@@ -580,39 +727,63 @@ button { font: inherit; color: inherit; }
 
 .type {
   appearance: none;
-  border: 0;
-  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 12px;
   height: 58px;
   padding: 0 16px;
+  border: 1px solid var(--color-surface-border);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
-  -webkit-backdrop-filter: blur(16px) saturate(170%);
-          backdrop-filter: blur(16px) saturate(170%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  color: var(--text);
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text-primary);
   font-size: 16px;
   font-weight: 600;
   text-align: left;
-  transition: transform var(--dur-press) var(--ease),
-              background-color var(--dur-base) var(--ease),
-              box-shadow var(--dur-base) var(--ease);
   -webkit-tap-highlight-color: transparent;
 }
 
-.type:active { transform: scale(0.97); }
+.type:active { opacity: 0.9; }
 
+/* Odabrani tip poprima svoju boju oznake, kao čip ispod donuta. */
 .type--selected {
-  background: rgba(34, 197, 94, 0.16);
-  box-shadow:
-    inset 0 0 0 1.5px var(--accent),
-    0 8px 22px rgba(34, 197, 94, 0.22);
+  border-color: var(--tag);
+  background: color-mix(in srgb, var(--tag) 12%, transparent);
   font-weight: 700;
 }
 
 .type__emoji { font-size: 20px; line-height: 1; }
+
+/* Polje za mjesečni cilj u sheetu — pilula kao i gumbi tipova iznad. */
+.sheet__input {
+  width: 100%;
+  height: 64px;
+  padding: 0 20px;
+  border: 1px solid var(--color-surface-border);
+  border-radius: 999px;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  caret-color: var(--color-text-primary);
+  font: inherit;
+  font-size: 30px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.sheet__input::placeholder { color: var(--color-text-secondary); }
+
+/* Fokus se vidi po rubu, ne po outlineu. */
+.sheet__input:focus,
+.sheet__input:focus-visible {
+  outline: none;
+  border-color: var(--color-border-focused);
+}
+
+/* Crveni rub zamjenjuje sivi, ne dodaje se drugi. */
+.sheet__input--invalid,
+.sheet__input--invalid:focus {
+  border-color: var(--color-danger);
+}
 
 /* ---------------------------------------------------------------------------
    HYPE
@@ -628,10 +799,9 @@ button { font: inherit; color: inherit; }
   align-items: center;
   justify-content: center;
   gap: 20px;
-  padding: 56px 20px max(28px, env(safe-area-inset-bottom));
-  background: rgba(4, 6, 10, 0.72);
-  -webkit-backdrop-filter: blur(10px);
-          backdrop-filter: blur(10px);
+  padding: 56px 16px max(28px, env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.94);
+  overflow-y: auto;
 }
 
 .hype__inner {
@@ -647,13 +817,10 @@ button { font: inherit; color: inherit; }
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 34px;
-  padding: 0 14px;
+  padding: 8px 14px;
+  border: 1px solid var(--color-surface-border);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
-  -webkit-backdrop-filter: blur(18px) saturate(180%);
-          backdrop-filter: blur(18px) saturate(180%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  background: var(--color-surface);
   font-size: 13px;
   font-weight: 600;
 }
@@ -666,37 +833,29 @@ button { font: inherit; color: inherit; }
   align-items: center;
   gap: 20px;
   width: 100%;
-  padding: 28px 22px 26px;
-  border-radius: 36px;
-  background: rgba(255, 255, 255, 0.07);
-  -webkit-backdrop-filter: blur(30px) saturate(185%);
-          backdrop-filter: blur(30px) saturate(185%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.24),
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.08),
-    0 24px 60px rgba(0, 0, 0, 0.55);
+  padding: 20px 20px 24px;
 }
 
 .hype__slot {
   position: relative;
   width: 100%;
   aspect-ratio: 1.1;
-  border-radius: 26px;
+  border-radius: 16px;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--color-background);
 }
 
 /* Rub ide preko medija — inače ga GIF s object-fit:cover prekrije. */
 .hype__slot::after {
-  content: ;
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: inset 0 0 0 1.5px rgba(34, 197, 94, 0.35);
+  box-shadow: inset 0 0 0 1px var(--color-card-border);
   pointer-events: none;
 }
 
@@ -713,7 +872,6 @@ button { font: inherit; color: inherit; }
   font-size: 28px;
   font-weight: 800;
   line-height: 1.15;
-  letter-spacing: -0.02em;
   text-align: center;
   text-wrap: pretty;
 }
@@ -724,103 +882,207 @@ button { font: inherit; color: inherit; }
   gap: 10px;
   font-size: 14px;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--color-accent);
 }
 
-.hype__footer-note { color: var(--text-subtle); font-weight: 500; }
+.hype__footer-note {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
 
 /* ---------------------------------------------------------------------------
-   PRIJAVA
+   PRIJAVA — dva koraka, bez kartice (design_handoff_evidencija/tracker-login/SPEC.md)
 --------------------------------------------------------------------------- */
 
 .auth {
   width: 100%;
   max-width: var(--app-max);
-  margin: auto 0;
+  min-height: 100dvh;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  padding:
+    calc(env(safe-area-inset-top) + 20px)
+    20px
+    calc(env(safe-area-inset-bottom) + 34px);
 }
 
-.auth__brand { text-align: center; margin-bottom: 4px; }
+/* Svaki korak puni cijelu visinu: gumb / tipkovnica ostaju prikovani za dno. */
+.auth__step {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.auth__marker {
+  font-size: 17px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+}
+
+.auth__marker-now { color: var(--color-accent); }
+.auth__marker-total { color: var(--color-text-secondary); }
 
 .auth__title {
-  margin: 0;
-  font-size: 34px;
+  margin: 28px 0 0;
+  font-size: 44px;
+  line-height: 1.02;
   font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
+  letter-spacing: -1.2px;
+}
+
+.auth__title--pin {
+  font-size: 34px;
+  line-height: 1.05;
+  letter-spacing: -0.8px;
 }
 
 .auth__tagline {
-  margin: 8px 0 0;
-  font-size: 13px;
-  color: var(--text-muted);
+  margin: 12px 0 0;
+  font-size: 16px;
+  color: var(--color-text-secondary);
 }
 
-.auth__card {
+.auth__sub {
+  margin: 8px 0 0;
+  font-size: 16px;
+  color: var(--color-text-secondary);
+}
+
+.auth__sub b,
+.auth__help b {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.auth__ask {
+  margin: 56px 0 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.auth__field {
+  position: relative;
+  margin-top: 14px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  border: 1px solid var(--color-surface-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+}
+
+.auth__field:focus-within { border-color: var(--color-border-focused); }
+
+/* Placeholder s dvije boje: crta se iza inputa i nestaje na prvi znak. */
+.auth__ghost {
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.auth__ghost-first { color: var(--color-text-primary); opacity: 0.38; }
+.auth__ghost-last { color: var(--color-accent); }
+
+.auth__input {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+/* Fokus nosi rub polja, ne outline. */
+.auth__input:focus,
+.auth__input:focus-visible { outline: none; }
+
+.auth__help {
+  margin: 12px 0 0;
+  padding: 0 28px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.auth__error {
+  margin: 8px 0 0;
+  padding: 0 28px;
+  min-height: 1.2em;
+  font-size: 14px;
+  color: var(--color-danger);
+}
+
+.auth__spacer { flex: 1; }
+
+/* Točke zauzimaju sav preostali prostor između naslova i tipkovnice. */
+.pin__area {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 16px;
-  padding: 26px 22px;
-  border-radius: 34px;
 }
 
-.field {
-  width: 100%;
-  height: 56px;
-  padding: 0 20px;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.08);
-  color: var(--text);
-  font-size: 17px;
-  font-weight: 500;
-  text-align: center;
+.pin__dots {
+  display: flex;
+  gap: 20px;
 }
 
-.field::placeholder { color: var(--text-subtle); font-weight: 400; }
-
-.field:focus {
-  outline: none;
-  background: rgba(255, 255, 255, 0.07);
-  box-shadow:
-    inset 0 0 0 1.5px var(--accent),
-    0 0 0 6px rgba(34, 197, 94, 0.18);
+.pin__dot {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-border);
+  border-radius: 9px;
+  background: transparent;
+  transition:
+    background-color 120ms var(--ease),
+    border-color 120ms var(--ease);
 }
 
-/* Korak prijave — mala orijentacija da se zna koliko je još ostalo. */
-.auth__step {
-  align-self: center;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-subtle);
+.pin__dot--filled {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
 }
 
-/* Uputa o formatu: kratki tekst, a sam format nosi istaknuti čip. */
-.auth__hint {
+/* Krivi PIN: točke se tresu 300 ms i ostaju crvene dok se ne isprazne. */
+.pin__dots--failed { animation: pin-shake 300ms ease-in-out; }
+
+.pin__dots--failed .pin__dot {
+  border-color: var(--color-danger);
+  background: var(--color-danger);
+}
+
+@keyframes pin-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-8px); }
+  80% { transform: translateX(8px); }
+}
+
+.pin__error {
   margin: 0;
+  min-height: 1.2em;
   text-align: center;
-  font-size: 13px;
-  line-height: 1.6;
-  letter-spacing: 0.01em;
-  color: var(--text-subtle);
-}
-
-.auth__code {
-  display: inline-block;
-  padding: 2px 9px;
-  border-radius: 999px;
-  background: rgba(34, 197, 94, 0.14);
-  box-shadow: inset 0 0 0 0.5px rgba(34, 197, 94, 0.35);
-  color: var(--accent);
-  font-family: "SF Mono", ui-monospace, Menlo, monospace;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0;
+  font-size: 14px;
+  color: var(--color-danger);
 }
 
 .error {
@@ -828,88 +1090,73 @@ button { font: inherit; color: inherit; }
   min-height: 1.2em;
   text-align: center;
   font-size: 13px;
-  color: #F87171;
-}
-
-.pin__dots {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  padding: 4px 0 8px;
-}
-
-.pin__dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.10);
-  transition: transform var(--dur-base) var(--ease),
-              background-color var(--dur-base) var(--ease),
-              box-shadow var(--dur-base) var(--ease);
-}
-
-.pin__dot--filled {
-  background: var(--accent);
-  transform: scale(1.15);
-  box-shadow: 0 0 14px rgba(34, 197, 94, 0.55);
+  color: var(--color-danger);
 }
 
 .pin__pad {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  /* Podignuto iznad spec razmaka od dna (34px) — na mobitelu je tipkovnica
+     inače preniska za palac. */
+  margin-bottom: 28px;
 }
 
 .pin__key {
   appearance: none;
-  border: 0;
-  cursor: pointer;
-  height: 56px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
-  -webkit-backdrop-filter: blur(16px) saturate(170%);
-          backdrop-filter: blur(16px) saturate(170%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  color: var(--text);
-  font-size: 20px;
+  height: 80px;
+  border: 1px solid var(--color-card-border);
+  border-radius: 22px;
+  background: linear-gradient(
+    135deg,
+    var(--color-card-gradient-from),
+    var(--color-card-gradient-to)
+  );
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 32px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  transition: transform var(--dur-press) var(--ease),
-              background-color var(--dur-press) var(--ease);
+  cursor: pointer;
+  /* Bez zooma na dvostruki tap — brzo tipkanje PIN-a ga inače okida. */
+  touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
-.pin__key:active:not(:disabled) {
-  transform: scale(0.97);
-  background: rgba(255, 255, 255, 0.10);
+.pin__key:active:not(:disabled) { background: var(--color-card-border); }
+/* Dok je unos blokiran (slanje, krivi PIN) tipke se ne prigušuju — inače bi
+   tipkovnica treperila pri svakoj prijavi. Prigušena je samo prazna "obriši". */
+.pin__key:disabled { cursor: default; }
+.pin__key--ghost:disabled { opacity: 0.35; }
+
+/* "Natrag" i brisanje nemaju pločicu. */
+.pin__key--text,
+.pin__key--ghost {
+  border: 0;
+  background: none;
 }
 
-.pin__key--blank { background: none; box-shadow: none; cursor: default; }
-.pin__key:disabled { opacity: 0.35; }
+.pin__key--text {
+  font-size: 16px;
+  color: var(--color-text-secondary);
+}
+
+.pin__key--text:active:not(:disabled) { background: none; opacity: 0.9; }
+
+.pin__key--ghost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pin__key--ghost:active:not(:disabled) { background: var(--color-surface); }
 
 /* ---------------------------------------------------------------------------
    PRISTUPAČNOST
 --------------------------------------------------------------------------- */
 
 @media (prefers-reduced-motion: reduce) {
-  .bg__orb, .cta--pulse, .stats__sheen { animation: none; }
   *, *::before, *::after {
     transition-duration: 0.01ms !important;
   }
-}
-
-@media (prefers-reduced-transparency: reduce) {
-  .glass, .glass--thin, .sheet, .hype__card, .type, .pin__key, .hype {
-    -webkit-backdrop-filter: none;
-            backdrop-filter: none;
-    background: #12161C;
-  }
-  .bg__orb, .bg__grain { display: none; }
-}
-
-@media (prefers-contrast: more) {
-  .glass, .glass--thin, .sheet, .hype__card, .type, .pin__key {
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
-  }
-  .cal__weekday, .stat__label, .cal__hint { color: var(--text-muted); }
 }

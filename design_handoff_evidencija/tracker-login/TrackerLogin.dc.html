@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Trening Tracker — prijava + početna (mobile)" description="Korak 1/2 korisničko ime s imeprezime placeholderom, korak 2/2 PIN s velikom tipkovnicom, početna s velikom porukom" -->
+<helmet><script src="./ds-base.js"></script><style>html,body{margin:0;background:var(--color-surface)}*{box-sizing:border-box}input{background:transparent;border:0;outline:none;font:inherit}</style></helmet>
+<div style="display:flex;gap:48px;padding:48px;align-items:flex-start;width:max-content;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',Roboto,system-ui,sans-serif">
+<section data-screen-label="01 Korak 1 — korisničko ime" style="display:flex;flex-direction:column;gap:12px">
+<div style="color:var(--color-text-secondary);font-size:13px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase">Korak 1 · korisničko ime</div>
+<div style="position:relative;width:390px;height:844px;border-radius:40px;border:1px solid var(--color-surface-border);overflow:hidden;background:var(--color-background);color:var(--color-text-primary);display:flex;flex-direction:column;padding:67px 20px 34px">
+<div style="font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:0.5px"><span style="color:var(--color-accent)">1</span><span style="color:var(--color-text-secondary)">/2</span></div>
+<div style="margin-top:28px;font-size:44px;line-height:1.02;font-weight:800;letter-spacing:-1.2px">Dobrodošao<br>majstorčino</div>
+<div style="margin-top:12px;font-size:16px;color:var(--color-text-secondary)">Evidencija koja te ne mazi.</div>
+<div style="margin-top:56px;font-size:22px;font-weight:700">Tko si ti?</div>
+<div style="margin-top:14px;position:relative;height:72px;border-radius:999px;background:var(--color-surface);border:1px solid var(--color-surface-border);display:flex;align-items:center;padding:0 28px">
+<sc-if value="{{ userFocus }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:-1px;border-radius:999px;border:1px solid var(--color-border-focused);pointer-events:none"></div></sc-if>
+<sc-if value="{{ userEmpty }}" hint-placeholder-val="{{ true }}"><div aria-hidden="true" style="position:absolute;left:28px;right:28px;top:0;bottom:0;display:flex;align-items:center;pointer-events:none;font-size:26px;font-weight:700;letter-spacing:-0.3px"><span style="color:var(--color-text-primary);opacity:0.38">ime</span><span style="color:var(--color-accent)">prezime</span></div></sc-if>
+<input aria-label="Korisničko ime u formatu imeprezime" autoCapitalize="none" autoCorrect="off" spellCheck="false" value="{{ username }}" onChange="{{ onUser }}" onFocus="{{ focusUser }}" onBlur="{{ blurUser }}" style="position:relative;flex:1;min-width:0;color:var(--color-text-primary);font-size:26px;font-weight:700;letter-spacing:-0.3px"></input>
+</div>
+<div style="margin-top:12px;padding:0 28px;display:flex;gap:6px;font-size:14px;color:var(--color-text-secondary)"><span>Sve spojeno, malim slovima · npr.</span><span style="color:var(--color-text-primary);font-weight:600">leoncugura</span></div>
+<div style="flex:1"></div>
+<sc-if value="{{ userEmpty }}" hint-placeholder-val="{{ true }}"><button type="button" disabled="" style="width:100%;height:60px;border:0;border-radius:999px;background:var(--color-accent);color:var(--color-text-on-light);font:inherit;font-size:18px;font-weight:700;opacity:0.4">Dalje</button></sc-if><sc-if value="{{ userFilled }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ next }}" style="width:100%;height:60px;border:0;border-radius:999px;background:var(--color-accent);color:var(--color-text-on-light);font:inherit;font-size:18px;font-weight:700;cursor:pointer" style-active="transform:scale(0.98)">Dalje</button></sc-if>
+</div>
+</section>
+<section data-screen-label="02 Korak 2 — PIN" style="display:flex;flex-direction:column;gap:12px">
+<div style="color:var(--color-text-secondary);font-size:13px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase">Korak 2 · PIN</div>
+<div style="position:relative;width:390px;height:844px;border-radius:40px;border:1px solid var(--color-surface-border);overflow:hidden;background:var(--color-background);color:var(--color-text-primary);display:flex;flex-direction:column;padding:67px 20px 34px">
+<div style="font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:0.5px"><span style="color:var(--color-accent)">2</span><span style="color:var(--color-text-secondary)">/2</span></div>
+<div style="margin-top:28px;font-size:34px;line-height:1.05;font-weight:800;letter-spacing:-0.8px">Upiši PIN</div>
+<div style="margin-top:8px;font-size:16px;color:var(--color-text-secondary)">Bok, <span style="color:var(--color-text-primary);font-weight:600">leoncugura</span></div>
+<div style="flex:1;display:flex;align-items:center;justify-content:center;gap:20px">
+<sc-for list="{{ dots }}" as="d" hint-placeholder-count="4"><sc-if value="{{ d.on }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:18px;border-radius:9px;background:var(--color-accent);border:2px solid var(--color-accent)"></div></sc-if><sc-if value="{{ d.off }}" hint-placeholder-val="{{ true }}"><div style="width:18px;height:18px;border-radius:9px;border:2px solid var(--color-border)"></div></sc-if></sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+<sc-for list="{{ keys }}" as="k" hint-placeholder-count="9"><button type="button" onClick="{{ k.press }}" style="height:80px;border-radius:22px;border:1px solid var(--color-card-border);background:linear-gradient(135deg,var(--color-card-gradient-from),var(--color-card-gradient-to));color:var(--color-text-primary);font:inherit;font-size:32px;font-weight:600;font-variant-numeric:tabular-nums;cursor:pointer" style-active="background:var(--color-card-border)">{{ k.n }}</button></sc-for>
+<button type="button" style="height:80px;border:0;background:none;color:var(--color-text-secondary);font:inherit;font-size:16px;font-weight:600;cursor:pointer">Natrag</button>
+<button type="button" onClick="{{ press0 }}" style="height:80px;border-radius:22px;border:1px solid var(--color-card-border);background:linear-gradient(135deg,var(--color-card-gradient-from),var(--color-card-gradient-to));color:var(--color-text-primary);font:inherit;font-size:32px;font-weight:600;cursor:pointer" style-active="background:var(--color-card-border)">0</button>
+<button type="button" aria-label="Obriši" onClick="{{ del }}" style="height:80px;border:0;border-radius:22px;background:none;color:var(--color-text-primary);display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="background:var(--color-surface)"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H9l-6 7 6 7h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1z"></path><path d="M17 9.5l-5 5M12 9.5l5 5"></path></svg></button>
+</div>
+</div>
+</section>
+<section data-screen-label="03 Početna" style="display:flex;flex-direction:column;gap:12px">
+<div style="color:var(--color-text-secondary);font-size:13px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase">Početna · poruka</div>
+<div style="position:relative;width:390px;height:844px;border-radius:40px;border:1px solid var(--color-surface-border);overflow:hidden;background:var(--color-background);color:var(--color-text-primary);display:flex;flex-direction:column;gap:24px;padding:67px 16px 24px">
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:30px;font-weight:800;letter-spacing:0.3px">Evidencija</div><a href="#" style="font-size:15px;font-weight:600;color:var(--color-text-secondary);text-decoration:none">Odjava</a></div>
+<div style="font-size:14px;color:var(--color-text-secondary)">Dobar dan, Imeprezime · Nedjelja, 22. studenoga</div>
+</div>
+<div style="padding:8px 4px 4px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--color-danger)"><div style="width:8px;height:8px;border-radius:4px;background:var(--color-danger)"></div>17:13</div>
+<div style="font-size:32px;line-height:1.12;font-weight:800;letter-spacing:-0.8px;text-wrap:pretty">Tvoj budući ja te upravo gleda i odmahuje glavom.</div>
+</div>
+<button type="button" style="height:60px;border:0;border-radius:999px;background:var(--color-accent);color:var(--color-text-on-light);font:inherit;font-size:18px;font-weight:700;cursor:pointer" style-active="transform:scale(0.98)">Označi današnji trening</button>
+<div style="display:flex;gap:12px">
+<div style="flex:1;min-width:0;height:188px;border-radius:24px;border:1px solid var(--color-card-border);background:linear-gradient(135deg,var(--color-card-gradient-from),var(--color-card-gradient-to));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+<div style="position:relative;width:110px;height:110px;display:flex;align-items:center;justify-content:center"><svg width="110" height="110" style="position:absolute;inset:0"><circle cx="55" cy="55" r="50" fill="none" stroke-width="10" style="stroke:var(--color-accent)"></circle></svg><span style="position:relative;font-size:40px;font-weight:800">0</span></div>
+<div style="font-size:15px;color:var(--color-text-secondary)">Ovaj mjesec</div>
+</div>
+<div style="flex:1;min-width:0;height:188px;border-radius:24px;border:1px solid var(--color-card-border);background:linear-gradient(135deg,var(--color-card-gradient-from),var(--color-card-gradient-to));padding:18px;display:flex;flex-direction:column;gap:2px"><div style="font-size:52px;font-weight:800;line-height:1.15">0</div><div style="font-size:15px;color:var(--color-text-secondary)">Ukupno</div></div>
+</div>
+<div style="flex:1;border-radius:24px 24px 0 0;background:linear-gradient(135deg,var(--color-card-light-gradient-from),var(--color-card-light-gradient-to))"></div>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { username: '', focus: false, pin: '' };
+  press = (n) => this.setState(s => ({ pin: s.pin.length < 4 ? s.pin + n : s.pin }));
+  renderVals() {
+    const s = this.state;
+    return {
+      username: s.username,
+      userEmpty: s.username === '',
+      userFocus: s.focus,
+      userFilled: s.username !== '',
+      onUser: e => this.setState({ username: e.target.value.toLowerCase().replace(/[^a-zčćđšž]/g, '') }),
+      focusUser: () => this.setState({ focus: true }),
+      blurUser: () => this.setState({ focus: false }),
+      next: () => {},
+      dots: [0, 1, 2, 3].map(i => ({ on: i < s.pin.length, off: i >= s.pin.length })),
+      keys: [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => ({ n, press: () => this.press(n) })),
+      press0: () => this.press(0),
+      del: () => this.setState(st => ({ pin: st.pin.slice(0, -1) })),
+    };
+  }
+}
+</script>
+</body>
+</html>

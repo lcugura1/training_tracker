@@ -7,11 +7,11 @@ import {
   loadSession,
   markTraining,
   saveSession,
+  setMonthlyGoal,
   type Profile,
   type Session,
 } from "./lib/api";
 import {
-  MONTH_LABELS,
   countInMonth,
   currentStreak,
   formatLong,
@@ -19,18 +19,22 @@ import {
   greeting,
   isAfterShameHour,
   longestStreak,
+  parseKey,
   timeHHMM,
   todayKey,
 } from "./lib/dates";
-import { randomHypeMessage, shameMessageFor } from "./lib/messages";
+import { totalTrainingDays, weeklyCumulative } from "./lib/stats";
+import { randomHypeMessage } from "./lib/messages";
 import { randomHypeMedia, type HypeMedia } from "./lib/hype";
 import { TRAINING_META, typesLabel, type TrainingType } from "./lib/trainings";
-import { Background } from "./components/Background";
 import { Login } from "./components/Login";
 import { Calendar } from "./components/Calendar";
 import { Stats } from "./components/Stats";
+import { TagBreakdown } from "./components/TagBreakdown";
 import { ShameBanner } from "./components/ShameBanner";
 import { TrainingSheet } from "./components/TrainingSheet";
+import { MonthlyGoalSheet } from "./components/MonthlyGoalSheet";
+import { useHistoryModal } from "./lib/useHistoryModal";
 import { HypeOverlay } from "./components/HypeOverlay";
 
 /** Backend normalizira ime u mala slova; za prikaz vraćamo veliko početno. */
@@ -41,6 +45,7 @@ function displayName(username: string): string {
 interface HypeState {
   emojis: string[];
   typeLabel: string;
+  dateLabel: string;
   message: string;
   media: HypeMedia | null;
   streak: number;
@@ -53,13 +58,15 @@ export default function App() {
   // Ako sesije nema, nema se što ni vraćati — krećemo odmah na prijavu.
   const [restoring, setRestoring] = useState(() => loadSession() !== null);
 
-  const [sheetOpen, setSheetOpen] = useState(false);
+  // Dan za koji je otvoren odabir treninga (YYYY-MM-DD). Danas ili do tri mjeseca unatrag.
+  const [sheetDate, setSheetDate] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [hype, setHype] = useState<HypeState | null>(null);
+  const goalModal = useHistoryModal();
 
-  // Sat koji tjera ponovni render kad prijeđe 20:00 i osvježava prikazano
-  // vrijeme u poruci srama, bez da korisnik refresha.
+  // Sat koji tjera ponovni render: osvježava prikazano vrijeme u poruci srama
+  // i hvata ponoć (novi dan bez treninga), bez da korisnik refresha.
   const [, setTick] = useState(0);
   useEffect(() => {
     const timer = setInterval(() => setTick((t) => t + 1), 30_000);
@@ -95,8 +102,17 @@ export default function App() {
     setProfile(null);
   }
 
+  async function saveGoal(goal: number) {
+    if (!session) return;
+    // Greška se propušta modalu, koji je prikaže ispod inputa i ostane otvoren.
+    const updated = await setMonthlyGoal(session.username, session.pin, goal);
+    setProfile(updated);
+    goalModal.hide();
+  }
+
   async function saveTraining(types: TrainingType[]) {
-    if (!session || !profile) return;
+    if (!session || !profile || !sheetDate) return;
+    const date = sheetDate;
     setSaving(true);
     setSaveError("");
 
@@ -105,18 +121,21 @@ export default function App() {
     const previousBest = longestStreak(profile.entries);
 
     try {
-      const updated = await markTraining(session.username, session.pin, todayKey(), types);
+      const updated = await markTraining(session.username, session.pin, date, types);
       const streak = currentStreak(updated.entries);
 
       setProfile(updated);
-      setSheetOpen(false);
+      setSheetDate(null);
       setHype({
         emojis: types.map((t) => TRAINING_META[t].emoji),
         typeLabel: typesLabel(types),
+        dateLabel: formatShort(parseKey(date)),
         message: randomHypeMessage(),
         media: randomHypeMedia(),
         streak,
-        isRecord: streak > previousBest,
+        // Naknadni unos može spojiti dva niza daleko iza nas, pa se rekord
+        // mjeri najduljim nizom, ne onim koji završava danas.
+        isRecord: longestStreak(updated.entries) > previousBest,
       });
     } catch (e) {
       setSaveError(e instanceof ApiError ? e.message : "Nešto je puklo.");
@@ -127,83 +146,91 @@ export default function App() {
 
   if (restoring) {
     return (
-      <>
-        <Background />
-        <main className="app" />
-      </>
+      <main className="app">
+        <div className="app__inner">
+          <h1 className="head__title">Evidencija</h1>
+          <p className="status">Učitavanje…</p>
+        </div>
+      </main>
     );
   }
 
   if (!session || !profile) {
-    return (
-      <>
-        <Background />
-        <main className="app">
-          <Login onSuccess={handleLogin} />
-        </main>
-      </>
-    );
+    return <Login onSuccess={handleLogin} />;
   }
 
   const now = new Date();
   const today = todayKey();
   const todayTypes = profile.entries[today];
   const showShame = !todayTypes && isAfterShameHour(now);
-  const dateLabel = formatLong(now);
 
   return (
     <>
-      <Background />
-
       <main className="app">
-        <div className={`app__inner app__content ${sheetOpen ? "app__content--dimmed" : ""}`}>
-          <header className="header">
-            <div className="header__text">
-              <h1 className="header__greeting">
-                {greeting(now)}, {displayName(profile.username)}
-              </h1>
-              <p className="header__date">{dateLabel}</p>
+        <div className="app__inner">
+          <header className="head">
+            <div className="head__row">
+              <h1 className="head__title">Evidencija</h1>
+              <button type="button" className="head__logout" onClick={logout}>
+                Odjava
+              </button>
             </div>
-            <button type="button" className="glass--thin pill" onClick={logout}>
-              Odjava
-            </button>
+            <p className="head__sub">
+              {greeting(now)}, {displayName(profile.username)} · {formatLong(now)}
+            </p>
           </header>
 
-          <Stats
-            streak={currentStreak(profile.entries)}
-            monthCount={countInMonth(profile.entries, now.getFullYear(), now.getMonth())}
-            monthLabel={MONTH_LABELS[now.getMonth()]}
-          />
-
-          {showShame && (
-            <ShameBanner time={timeHHMM(now)} message={shameMessageFor(today)} />
-          )}
-
-          <Calendar entries={profile.entries} onSelectToday={() => setSheetOpen(true)} />
+          {showShame && <ShameBanner time={timeHHMM(now)} />}
 
           <button
             type="button"
-            className={`cta ${todayTypes ? "" : "cta--pulse"}`}
-            onClick={() => setSheetOpen(true)}
+            className={`cta ${todayTypes ? "cta--quiet" : ""}`}
+            onClick={() => setSheetDate(today)}
           >
             {todayTypes ? "Promijeni današnji trening" : "Označi današnji trening"}
           </button>
+
+          <Stats
+            monthDone={countInMonth(profile.entries, now.getFullYear(), now.getMonth())}
+            monthLimit={profile.monthlyGoal}
+            onOpenGoal={goalModal.show}
+            total={totalTrainingDays(profile.entries)}
+            weeklyCumulative={weeklyCumulative(profile.entries, now)}
+          />
+
+          <Calendar entries={profile.entries} onSelectDay={setSheetDate} />
+
+          <TagBreakdown entries={profile.entries} />
         </div>
       </main>
 
       <AnimatePresence>
-        {sheetOpen && (
+        {sheetDate && (
           <TrainingSheet
-            key="sheet"
-            dateLabel={dateLabel}
-            initialTypes={todayTypes}
+            // Ključ po datumu: ako se sheet otvori dok prethodni još izlazi,
+            // mora nastati nov, a ne naslijediti stari odabir.
+            key={`sheet-${sheetDate}`}
+            dateLabel={formatLong(parseKey(sheetDate))}
+            isToday={sheetDate === today}
+            initialTypes={profile.entries[sheetDate]}
             busy={saving}
             error={saveError}
             onSave={saveTraining}
             onClose={() => {
               setSaveError("");
-              setSheetOpen(false);
+              setSheetDate(null);
             }}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {goalModal.open && (
+          <MonthlyGoalSheet
+            key="goal"
+            initialGoal={profile.monthlyGoal}
+            onSave={saveGoal}
+            onClose={goalModal.hide}
           />
         )}
       </AnimatePresence>
@@ -214,7 +241,7 @@ export default function App() {
             key="hype"
             emojis={hype.emojis}
             typeLabel={hype.typeLabel}
-            dateLabel={formatShort(now)}
+            dateLabel={hype.dateLabel}
             message={hype.message}
             media={hype.media}
             streak={hype.streak}

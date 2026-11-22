@@ -1,30 +1,37 @@
 # Trening Tracker
 
 Mobilna web aplikacija za evidenciju odlazaka u teretanu. Upišeš korisničko ime,
-označiš dan kad si trenirao — a ako u 20:00 nisi, aplikacija ti to kaže bez dlake
+označiš dan kad si trenirao — a ako nisi, aplikacija ti to kaže bez dlake
 na jeziku.
 
 ## Kako radi
 
 - **Prijava** — korisničko ime + 4-znamenkasti PIN. Bez emaila, bez lozinki.
   Profil živi na serveru, pa te prati na svim uređajima.
-- **Kalendar** — mjesečni prikaz. Označiti možeš **samo današnji dan**; povijest
-  se ne prepravlja.
-- **Tipovi treninga** — Ruke 💪, Noge 🦵, Leđa 🪽, Prsa 🛡️, Ramena 🪨,
-  Kardio 🏃, Full body 🏋️. Označeni dan u kalendaru poprima emoji svog tipa.
+- **Kalendar** — mjesečni prikaz. Označiti možeš današnji dan i **do 3 mjeseca
+  unatrag** (dodirni dan); starije se ne prepravlja. Granica se računa isto na
+  klijentu (`src/lib/dates.ts`) i na serveru (`netlify/functions/profile.mts`).
+- **Tipovi treninga** — Ruke 💪, Noge 🦵, Leđa 🪽, Prsa 🛡️, Ramena 🪨, Core 🧱,
+  Kardio 🏃, Boks 🥊, Full body 🏋️. Do dva po danu. Označeni dan u kalendaru pokazuje emoji
+  svog tipa (limeta pločica), a graf raspodjele koristi boje.
+- **Mjesečni cilj** — tap na karticu "Ovaj mjesec" otvara modal za cilj
+  (1–31 dolazaka) u istom bottom sheetu kao i odabir treninga. Sprema se na profil, a prsten pokazuje `dolasci/cilj`.
 - **Nabrijavanje** — nakon spremanja trening dobiješ pretjerano pohvalnu poruku
   i nasumičan GIF.
-- **Sram** — svaki dan nakon 20:00 bez označenog treninga donosi poruku iz
-  rotacije. Poruka je determinirana datumom, pa refresh ne mijenja ništa.
-- **Statistika** — niz uzastopnih dana i broj treninga u tekućem mjesecu.
+- **Sram** — svaki dan bez označenog treninga, od ponoći pa do označavanja, donosi poruku iz
+  liste. Poruka se bira nasumično pri svakom otvaranju appa i ne ponavlja se ista
+  dva puta zaredom; dok je app otvoren, ostaje ista.
+- **Statistika** — prsten treninga u mjesecu naspram cilja, ukupan broj s
+  trendom po tjednima i raspodjela po tipu treninga. Niz uzastopnih dana vidi
+  se na ekranu nakon spremanja.
 
 ## Stack
 
 | Sloj | Tehnologija |
 |---|---|
 | Frontend | Vite 8, React 19, TypeScript 6 |
-| Animacije | [Motion](https://motion.dev) — opruge, ne fiksna trajanja |
-| Izgled | Apple Liquid Glass (CSS + SVG refrakcija), dark-only |
+| Animacije | [Motion](https://motion.dev) — sheet, hype i donut graf |
+| Izgled | Tamna tema, limeta kao akcent; tokeni iz [`design_handoff_evidencija/SPEC.md`](design_handoff_evidencija/SPEC.md), sistemski font |
 | Backend | Netlify Functions (v2, ESM) |
 | Pohrana | Netlify Blobs |
 | Hosting | Netlify |

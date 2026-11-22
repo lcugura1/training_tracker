@@ -15,6 +15,7 @@ const TRAINING_TYPES = [
   "ramena",
   "core",
   "kardio",
+  "boks",
   "fullbody",
 ] as const;
 
@@ -26,6 +27,8 @@ interface Profile {
   pinSalt: string;
   createdAt: string;
   entries: Record<string, TrainingType[] | TrainingType>;
+  /** Mjesečni cilj dolazaka (1-31). Nema ga dok ga korisnik ne postavi. */
+  monthlyGoal?: number;
   failedAttempts?: number;
   lockedUntil?: number;
 }
@@ -70,6 +73,43 @@ function isValidDate(raw: unknown): raw is string {
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === raw;
 }
 
+/**
+ * Koliko mjeseci unatrag se smije naknadno upisati trening.
+ * Ista vrijednost živi u src/lib/dates.ts — mijenjaj obje.
+ */
+const EDIT_WINDOW_MONTHS = 3;
+
+/**
+ * Dopušteni raspon: od istog datuma prije tri mjeseca do danas. Klijent šalje
+ * datum svoje lokalne zone, a ovdje računamo u UTC-u, pa oba kraja imaju dan
+ * tolerancije — inače bi se oko ponoći tražilo "jučer" ili "sutra" i odbilo.
+ */
+function isWithinEditWindow(date: string): boolean {
+  const day = (d: Date) => d.toISOString().slice(0, 10);
+
+  const now = new Date();
+  const todayUtc = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
+
+  const latest = new Date(todayUtc);
+  latest.setUTCDate(latest.getUTCDate() + 1);
+
+  // Isti datum prije N mjeseci; ako ga nema (31. u kraćem mjesecu), zadnji dan
+  // tog mjeseca — Date bi inače prelio u sljedeći i pomaknuo granicu.
+  const earliest = new Date(
+    Date.UTC(todayUtc.getUTCFullYear(), todayUtc.getUTCMonth() - EDIT_WINDOW_MONTHS, 1),
+  );
+  const lastDay = new Date(
+    Date.UTC(earliest.getUTCFullYear(), earliest.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  earliest.setUTCDate(Math.min(todayUtc.getUTCDate(), lastDay));
+  earliest.setUTCDate(earliest.getUTCDate() - 1);
+
+  // YYYY-MM-DD se leksikografski uspoređuje kao datum.
+  return date >= day(earliest) && date <= day(latest);
+}
+
 async function hashPin(pin: string, salt: string): Promise<string> {
   const data = new TextEncoder().encode(`${salt}:${pin}`);
   const digest = await crypto.subtle.digest("SHA-256", data);
@@ -106,6 +146,7 @@ function publicProfile(p: Profile) {
     username: p.username,
     createdAt: p.createdAt,
     entries: normalizeEntries(p.entries),
+    monthlyGoal: p.monthlyGoal ?? null,
   };
 }
 
@@ -193,6 +234,17 @@ export default async (req: Request, _context: Context) => {
     return json({ ok: true, created: false, profile: publicProfile(profile) });
   }
 
+  /* --- Mjesečni cilj --- */
+  if (body.action === "setGoal") {
+    const goal = body.goal;
+    if (typeof goal !== "number" || !Number.isInteger(goal) || goal < 1 || goal > 31) {
+      return fail("goal", "Cilj mora biti cijeli broj od 1 do 31.");
+    }
+    profile.monthlyGoal = goal;
+    await blobs.setJSON(username, profile);
+    return json({ ok: true, profile: publicProfile(profile) });
+  }
+
   /* --- Označavanje treninga --- */
   if (body.action === "mark") {
     if (!isValidDate(body.date)) return fail("date", "Neispravan datum.");
@@ -206,10 +258,12 @@ export default async (req: Request, _context: Context) => {
     if (!types.every((t) => TRAINING_TYPES.includes(t as TrainingType))) {
       return fail("type", "Nepoznat tip treninga.");
     }
-    // Samo današnji dan — ne dopuštamo naknadno popravljanje povijesti.
-    const today = new Date().toISOString().slice(0, 10);
-    if (body.date !== today) {
-      return fail("date", "Možeš označiti samo današnji dan.", 403);
+    if (!isWithinEditWindow(body.date)) {
+      return fail(
+        "date",
+        `Možeš označiti današnji dan ili ${EDIT_WINDOW_MONTHS} mjeseca unatrag.`,
+        403,
+      );
     }
     profile.entries = { ...profile.entries, [body.date]: types as TrainingType[] };
     await blobs.setJSON(username, profile);

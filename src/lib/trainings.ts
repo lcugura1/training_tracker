@@ -7,6 +7,7 @@ export const TRAINING_TYPES = [
   "ramena",
   "core",
   "kardio",
+  "boks",
   "fullbody",
 ] as const;
 
@@ -18,18 +19,26 @@ export const MAX_TYPES_PER_DAY = 2;
 interface TrainingMeta {
   label: string;
   emoji: string;
+  /** Boja tipa u grafu raspodjele i odabiru. Podatkovna vrijednost, ne UI token. */
+  color: string;
 }
 
-/* Boje namjerno nema: dizajn nosi jedna zelena, a tip se razlikuje emojijem. */
+/*
+ * Boje prate TAG_COLORS iz dizajna (design_handoff_evidencija/SPEC.md). Dizajn
+ * poznaje šest oznaka, a mi imamo osam tipova — Core, Full body i Boks dobili su
+ * nove boje iz iste obitelji (cijan, žuta, srebrna). Kalendar ne koristi boje: tamo tip
+ * dana nosi emoji.
+ */
 export const TRAINING_META: Record<TrainingType, TrainingMeta> = {
-  ruke:     { label: "Ruke",      emoji: "💪" },
-  noge:     { label: "Noge",      emoji: "🦵" },
-  leda:     { label: "Leđa",      emoji: "🪽" },
-  prsa:     { label: "Prsa",      emoji: "🛡️" },
-  ramena:   { label: "Ramena",    emoji: "🪨" },
-  core:     { label: "Core",      emoji: "🧱" },
-  kardio:   { label: "Kardio",    emoji: "🏃" },
-  fullbody: { label: "Full body", emoji: "🏋️" },
+  ruke:     { label: "Ruke",      emoji: "💪", color: "#FF6B8A" },
+  noge:     { label: "Noge",      emoji: "🦵", color: "#FF9F45" },
+  leda:     { label: "Leđa",      emoji: "🪽", color: "#4DA3FF" },
+  prsa:     { label: "Prsa",      emoji: "🛡️", color: "#C5F23D" },
+  ramena:   { label: "Ramena",    emoji: "🪨", color: "#B57BFF" },
+  core:     { label: "Core",      emoji: "🧱", color: "#4DD4E6" },
+  kardio:   { label: "Kardio",    emoji: "🏃", color: "#3DDC97" },
+  boks:     { label: "Boks",      emoji: "🥊", color: "#C7C7CC" },
+  fullbody: { label: "Full body", emoji: "🏋️", color: "#FFD84D" },
 };
 
 /**

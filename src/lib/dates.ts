@@ -17,8 +17,38 @@ export function todayKey(): string {
   return toKey(new Date());
 }
 
-/** Sram se javlja tek nakon 20:00. */
-export const SHAME_HOUR = 20;
+/** Obrnuto od toKey: "2026-11-22" → lokalna ponoć tog dana. */
+export function parseKey(key: string): Date {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+/**
+ * Koliko mjeseci unatrag se smije naknadno upisati trening.
+ * Ista vrijednost živi u netlify/functions/profile.mts — mijenjaj obje.
+ */
+export const EDIT_WINDOW_MONTHS = 3;
+
+/**
+ * Najraniji dan koji se još smije označiti: isti datum prije tri mjeseca.
+ * Ako taj dan ne postoji (31. u kraćem mjesecu), uzima se zadnji dan mjeseca —
+ * bez toga bi Date prelio u sljedeći mjesec i pomaknuo granicu.
+ */
+export function earliestEditableKey(now = new Date()): string {
+  const target = new Date(now.getFullYear(), now.getMonth() - EDIT_WINDOW_MONTHS, 1);
+  const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+  target.setDate(Math.min(now.getDate(), lastDay));
+  return toKey(target);
+}
+
+/** Smije li se dan označiti: od granice unatrag pa do danas (budućnost ne). */
+export function isEditableKey(key: string, now = new Date()): boolean {
+  // Ključevi su YYYY-MM-DD, pa je leksikografska usporedba ujedno i kronološka.
+  return key >= earliestEditableKey(now) && key <= toKey(now);
+}
+
+/** Od kojeg sata se javlja sram. 0 = cijeli dan, sve dok se trening ne označi. */
+export const SHAME_HOUR = 0;
 
 export function isAfterShameHour(now = new Date()): boolean {
   return now.getHours() >= SHAME_HOUR;

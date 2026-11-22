@@ -52,7 +52,7 @@ export function HypeOverlay({
           <span>{typeLabel} · {dateLabel}</span>
         </div>
 
-        <div className="hype__card">
+        <div className="card hype__card">
           <div className="hype__slot">
             {media ? (
               media.kind === "video" ? (

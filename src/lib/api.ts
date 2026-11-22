@@ -4,6 +4,8 @@ export interface Profile {
   username: string;
   createdAt: string;
   entries: Record<string, TrainingType[]>;
+  /** Mjesečni cilj dolazaka; null dok ga korisnik ne postavi. */
+  monthlyGoal: number | null;
 }
 
 export class ApiError extends Error {
@@ -70,6 +72,20 @@ export async function markTraining(
     pin,
     date,
     types,
+  });
+  return data.profile;
+}
+
+export async function setMonthlyGoal(
+  username: string,
+  pin: string,
+  goal: number,
+): Promise<Profile> {
+  const data = await post<{ profile: Profile }>({
+    action: "setGoal",
+    username,
+    pin,
+    goal,
   });
   return data.profile;
 }
